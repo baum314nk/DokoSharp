@@ -26,7 +26,7 @@ public class SpecialRule
             var winnerCard = trick.PlacedCards[winnerIdx];
 
             // Check if winner placed a Kreuz Jack
-            if (winnerCard.Base == CardBase.Existing[CardColor.Kreuz]["J"])
+            if (winnerCard.Base == CardBase.Existing[CardColor.Kreuz]["B"])
             {
                 string description = "Karlchen";
 
@@ -161,6 +161,22 @@ public class SpecialRule
         });
 
     #endregion
+
+    /// <summary>
+    /// Returns the default special rules of a Doko game.
+    /// </summary>
+    public static IEnumerable<SpecialRule> GetDefaults()
+    {
+        return new[]
+        {
+            Herz10Rule,
+            ArmutRule,
+            HochzeitRule,
+            KarlchenRule,
+            DoppelkopfRule,
+            SchweinchenRule,
+        };
+    }
 
     #region Properties
 

@@ -5,15 +5,21 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace DokoTable;
 
-internal class DokoViewModel
+public class DokoViewModel
 {
-    public ObservableCollection<Card> Cards { get; protected set; }
+    public Game Game { get; protected set; }
 
     public DokoViewModel()
     {
-        Cards = new ObservableCollection<Card>(Card.GetDeckOfCards());
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Error()
+            .WriteTo.Debug()
+            .CreateLogger();
+
+        Game = new Game("Player1", "Player2", "Player3", "Player4", SpecialRule.GetDefaults(), 100);
     }
 }

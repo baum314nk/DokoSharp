@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace DokoLib;
 
@@ -35,9 +36,17 @@ public class Round
         /// </summary>
         public Player[] Winners { get; init; }
         /// <summary>
+        /// The total value of the winners.
+        /// </summary>
+        public int WinnerValue { get; init; }
+        /// <summary>
         /// The players that lost the round.
         /// </summary>
-        public Player[] Losers { get; init; }
+        public Player[] Loosers { get; init; }
+        /// <summary>
+        /// The total value of the loosers.
+        /// </summary>
+        public int LooserValue { get; init; }
         /// <summary>
         /// The points that were rewarded for the round.
         /// If the round was a solo, corresponds to the asbolute points the opponents will receive.
@@ -47,17 +56,19 @@ public class Round
         /// <summary>
         /// Is true if the round was a solo, otherwise false.
         /// </summary>
-        public bool IsSolo => Winners.Length != 1;
+        public bool IsSolo => Winners.Length == 1 || Loosers.Length == 1;
 
         /// <summary>
         /// Is true if the Re party won, otherwise false.
         /// </summary>
         public bool RePartyWon { get; init; }
 
-        public RoundResult(IEnumerable<Player> winners, IEnumerable<Player> loosers, int points, bool rePartyWon)
+        public RoundResult(IEnumerable<Player> winners, int winnerValue, IEnumerable<Player> loosers, int looserValue, int points, bool rePartyWon)
         {
             Winners = winners.ToArray();
-            Losers = loosers.ToArray();
+            WinnerValue = winnerValue;
+            Loosers = loosers.ToArray();
+            LooserValue = looserValue;
             BasePoints = points;
             RePartyWon = rePartyWon;
         }
@@ -235,9 +246,15 @@ public class Round
     /// </summary>
     public void Start()
     {
-        if (IsRunning || IsFinished) return;
+        if (IsRunning || IsFinished)
+        {
+            Log.Warning("The round is already running or has finished. Aborting.");
+        }
         IsRunning = true;
+        Log.Information("Round started.");
+
         // Invoke special rules
+        Log.Debug("Call OnRoundStarted callback of special rules.");
         Game.SpecialRules.ForEach(rule => rule.OnRoundStarted?.Invoke(this));
 
         // Give hand cards and perform reservations
@@ -252,6 +269,7 @@ public class Round
             giveHandsAgain = Description.ActiveReservation?.Type == ReservationType.GiveHandsAgain;
         }
         // Invoke special rules
+        Log.Debug("Call OnReservationsPerformed callback of special rules.");
         Game.SpecialRules.ForEach(rule => rule.OnReservationsPerformed?.Invoke(this));
 
         // Do all 12 tricks
@@ -266,11 +284,14 @@ public class Round
             // Execute trick
             CurrentTrickNumber++;
             CurrentTrick = new(this, playersInOrder);
+            Log.Debug("Created trick {i} with starting player {player}", CurrentTrickNumber, playersInOrder[0].Name);
+            
             CurrentTrick.Start();
 
             // Add trick to finished tricks
             _finishedTricks[CurrentTrickNumber - 1] = CurrentTrick;
             // Invoke special rules
+            Log.Debug("Call OnTrickEnded callback of special rules.");
             Game.SpecialRules.ForEach(rule => rule.OnTrickEnded?.Invoke(CurrentTrick));
 
             // Winner starts next trick
@@ -281,6 +302,7 @@ public class Round
 
         DetermineResult();
         IsRunning = false;
+        Log.Information("Round finished.");
     }
 
     /// <summary>
@@ -289,24 +311,31 @@ public class Round
     /// </summary>
     protected void GiveHandCards()
     {
+        Log.Information("Start giving hand cards.");
         Card[] deck = Card.GetDeckOfCards(this).Shuffle().ToArray();
 
+        CardBase kreuzDame = CardBase.Existing[CardColor.Kreuz]["D"];
         for (int i = 0; i < 4; i++)
         {
             Player player = PlayersInOrder[i];
             Card[] handCards = deck[(12 * i)..(12 * (i + 1))];
 
+            player.ReceiveHandCards(handCards);
+            Log.Information("Gave hand cards to player {player}.", player.Name);
+
             // Assign player to party according to possession of Kreuz Dame
-            if (handCards.Any(c => c.Base == CardBase.Existing[CardColor.Kreuz]["D"]))
+            if (handCards.Any(c => c.Base == kreuzDame))
             {
                 Description.ReParty.Add(player);
+                Log.Information("Added player {player} to Re party.", player.Name);
             } else
             {
                 Description.ContraParty.Add(player);
+                Log.Information("Added player {player} to Contra party.", player.Name);
             }
-
-            player.ReceiveHandCards(handCards);
         }
+
+        Log.Information("Finished giving hand cards.");
     }
 
     /// <summary>
@@ -314,29 +343,41 @@ public class Round
     /// </summary>
     protected void PerformReservations()
     {
-        Reservation?[] reservations = new Reservation?[4];
+        Log.Information("Starting reservations.");
+
+        List<Reservation> reservations = new();
         for (int i = 0; i < PlayersInOrder.Length; i++)
         {
             Player player = PlayersInOrder[i];
-            reservations[i] = player.RequestReservation();
+            Reservation? reservation = player.RequestReservation();
+            if (reservation is null) Log.Information("Player {player} has no reservation.", player.Name);
+            else
+            {
+                reservations.Add(reservation);
+                Log.Information("Player {player} has a reservation of type {type}.", player.Name, reservation.Type);
+            }
+
         }
 
-        Reservation? currentReservation = null;
-        for (int i = 0; i < PlayersInOrder.Length; i++)
+        Reservation? activeReservation = null;
+        foreach (Reservation reservation in reservations)
         {
-            Player player = PlayersInOrder[i];
-            Reservation? reservation = reservations[i];
-
             if (reservation is null) continue;
-            if (!player.RequestYesNo("Reveal you reservation?")) continue;
+            if (!reservation.Player.RequestYesNo("Reveal you reservation?")) continue;
 
-            if (currentReservation is null || reservation.Type > currentReservation.Type)
+            if (activeReservation is null || reservation.Type > activeReservation.Type)
             {
-                currentReservation = reservations[i];
+                activeReservation = reservation;
             }
         }
 
-        Description.ActiveReservation = currentReservation;
+        Description.ActiveReservation = activeReservation;        
+        if (activeReservation is null) Log.Information("No active reservation set.");
+        else Log.Information("Active reservation is of type {type} by player{player}.", 
+                             activeReservation.Type,
+                             activeReservation.Player.Name);
+
+        Log.Information("Finished reservations.");
     }
 
     /// <summary>
@@ -345,6 +386,8 @@ public class Round
     /// <returns>An object describing the result.</returns>
     protected void DetermineResult()
     {
+        Log.Information("Start determining results.");
+
         int reValue = 0;
         int contraValue = 0;
         // Calculate total value of parties
@@ -358,6 +401,8 @@ public class Round
                 contraValue += trick.Value;
             }
         }
+        Log.Information("Re party has {value} value.", reValue);
+        Log.Information("Contra party has {value} value.", contraValue);
 
         int rePoints = Description.ReAdditionalPoints.Count;
         int contraPoints = Description.ContraAdditionalPoints.Count;
@@ -375,10 +420,12 @@ public class Round
         int basePoints = (reValue > contraValue) ? rePoints - contraPoints : contraPoints - rePoints;
         if (reValue > contraValue)
         {
-            Result = new(Description.ReParty, Description.ContraParty, basePoints, true);
+            Result = new(Description.ReParty, reValue, Description.ContraParty, contraValue, basePoints, true);
         } else
         {
-            Result = new(Description.ReParty, Description.ContraParty, basePoints, false);
+            Result = new(Description.ContraParty, contraValue, Description.ReParty, reValue, basePoints, false);
         }
+
+        Log.Information("Finished determining results.");
     }
 }

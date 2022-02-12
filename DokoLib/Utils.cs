@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace DokoLib;
 
@@ -20,6 +21,7 @@ public static class Utils
         for (int idx = 0; idx < list.Count; idx++)
         {
             int newIdx = rng.Next(list.Count);
+            while(result[newIdx] != null) newIdx = rng.Next(list.Count);
 
             result[newIdx] = list[idx];
         }
@@ -46,5 +48,4 @@ public static class Utils
             action(element);
         }
     }
-
 }

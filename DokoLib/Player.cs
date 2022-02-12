@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace DokoLib;
 
@@ -117,6 +118,7 @@ public class Player
     /// </summary>
     public bool RequestYesNo(string requestText)
     {
+        return false;
         throw new NotImplementedException();
     }
 

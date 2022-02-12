@@ -20,6 +20,8 @@ namespace DokoTable
     /// </summary>
     public partial class MainWindow : Window
     {
+        public DokoViewModel DokoContext => (DokoViewModel)DataContext;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -27,6 +29,14 @@ namespace DokoTable
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            cmdStart.IsEnabled = false;
+            DokoContext.Game.Start();
+
+            cmdStart.Content = string.Join('\n', DokoContext.Game.Points.Select(kv => $"{kv.Key.Name}: {kv.Value}"));
         }
     }
 }

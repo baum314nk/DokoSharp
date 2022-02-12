@@ -78,6 +78,11 @@ public class CardBase
         Color = color;
         Value = value;
     }
+
+    public override string ToString()
+    {
+        return $"{Color}{Name}";
+    }
 }
 
 /// <summary>
@@ -101,6 +106,14 @@ public class Card
     public bool IsTrump => Round.Description.TrumpRanking.Contains(Base);
 
     /// <summary>
+    /// Returns the rank of the card in the round.
+    /// The rank can be used to compare cards.
+    /// </summary>
+    public int Rank => IsTrump ?
+                       400 + Round.Description.TrumpRanking.IndexOf(Base) :
+                       100 * (int)Base.Color + Base.Value;
+
+    /// <summary>
     /// Creates a new card for the given round from the given card base.
     /// </summary>
     /// <param name="game"></param>
@@ -109,6 +122,11 @@ public class Card
     {
         Round = round;
         Base = cardBase;
+    }
+
+    public override string ToString()
+    {
+        return Base.ToString();
     }
 
     /// <summary>

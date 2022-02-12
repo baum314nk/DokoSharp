@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace DokoLib;
 
@@ -75,17 +76,29 @@ public class Trick
     /// </summary>
     public void Start()
     {
-        if (IsRunning || IsFinished) return;
+        if (IsRunning || IsFinished)
+        {
+            Log.Warning("The trick is already running or has finished. Aborting.");
+            return;
+        }
+
         IsRunning = true;
+        Log.Information("Trick started.");
 
         // Let each player place a card
         for (int i = 0; i < 4; i++)
         {
-            Card placedCard = PlayersInOrder[i].PlaceCard(this);
+            Player player = PlayersInOrder[i];
+
+            Card placedCard = player.PlaceCard(this);
             _cards[i] = placedCard;
+            Log.Information("Player {player} placed the card {card}.", player.Name, placedCard);
         }
 
+        DetermineWinner();
+
         IsRunning = false;
+        Log.Information("Trick finished.");
     }
 
     /// <summary>
@@ -101,16 +114,61 @@ public class Trick
         // Trump has to be placed
         if (firstCard.IsTrump)
         {
-            if (card.IsTrump) return true;
+            if (card.IsTrump)
+            {
+                Log.Debug("Valid placing. Player {player} can place {card} on {firstCard}.", player.Name, card, firstCard);
+                return true;
+            }
 
             // Placing is only valid if player doesn't have any trump cards
-            return !player.HasTrumpCard();
+            if (!player.HasTrumpCard())
+            {
+                Log.Debug("Valid placing. Player {player} doesn't have a trump card to place on {firstCard}.", player.Name, firstCard);
+                return true;
+            } else
+            {
+                Log.Debug("Invalid placing. Player {player} has a trump card to place on on {firstCard}.", player.Name, firstCard);
+                return false;
+            }
         } else // Color of the first card has to be placed
         {
-            if (card.Base.Color == firstCard.Base.Color) return true;
+            if (card.Base.Color == firstCard.Base.Color)
+            {
+                Log.Debug("Valid placing. Player {player} can place {card} on {firstCard}.", player.Name, card, firstCard);
+                return true;
+            }
 
             // Placing is only valid if player doesn't have any cards of the required color
-            return !player.HasColoredCard(firstCard.Base.Color);
+            if (!player.HasColoredCard(firstCard.Base.Color))
+            {
+                Log.Debug("Valid placing. Player {player} doesn't have a {color} card to place on {firstCard}.", player.Name, firstCard.Base.Color, firstCard);
+                return true;
+            }
+            else
+            {
+                Log.Debug("Invalid placing. Player {player} has a {color} card to place on on {firstCard}.", player.Name, firstCard.Base.Color, firstCard);
+                return false;
+            }
         }
+    }
+
+    /// <summary>
+    /// Determines the winner of the trick and set the <see cref="Winner"/> property accordingly.
+    /// </summary>
+    protected void DetermineWinner()
+    {
+        int winnerIdx = 0;
+        Card winnerCard = PlacedCards[0];
+        for (int i = 1; i < 4; i++)
+        {
+            if (PlacedCards[i].Rank > winnerCard.Rank)
+            {
+                winnerCard = PlacedCards[i];
+                winnerIdx = i;
+            }
+        }
+
+        Winner = PlayersInOrder[winnerIdx];
+        Log.Information("Player {player} won the trick with a {card}.", Winner.Name, winnerCard);
     }
 }
