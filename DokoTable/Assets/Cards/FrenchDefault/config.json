@@ -1,0 +1,17 @@
+{
+  "name": "French Default",
+  "pattern": "^(?<symbol>\\w+)_of_(?<color>\\w+)$",
+  "extension":  "png",
+  "symbol_names": {
+    "ace": "A",
+    "king": "K",
+    "queen": "O",
+    "jack": "U"
+  },
+  "color_names": {
+    "clubs": "Eichel",
+    "spades": "Blatt",
+    "hearts": "Herz",
+    "diamonds": "Schell"
+  }
+}

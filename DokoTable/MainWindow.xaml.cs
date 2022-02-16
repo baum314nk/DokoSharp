@@ -12,31 +12,32 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Serilog;
+using DokoTable.ViewModels;
 
-namespace DokoTable
+namespace DokoTable;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public DokoViewModel DokoContext => (DokoViewModel)DataContext;
+
+    public MainWindow()
     {
-        public DokoViewModel DokoContext => (DokoViewModel)DataContext;
+        InitializeComponent();
+    }
 
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Setup logging
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Debug(Serilog.Events.LogEventLevel.Debug)
+            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Information)
+            .CreateLogger();
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            cmdStart.IsEnabled = false;
-            DokoContext.Game.Start();
-
-            cmdStart.Content = string.Join('\n', DokoContext.Game.Points.Select(kv => $"{kv.Key.Name}: {kv.Value}"));
-        }
+        // Load default card images
+        DokoContext.LoadDefaultImageSet.Execute(null);
     }
 }

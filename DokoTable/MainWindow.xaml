@@ -3,13 +3,56 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DokoTable"
+        xmlns:wpf="clr-namespace:Xceed.Wpf.Toolkit;assembly=DotNetProjects.Wpf.Extended.Toolkit"
+        xmlns:vw="clr-namespace:DokoTable.ViewModels" xmlns:controls="clr-namespace:DokoTable.Controls"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
+        Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Background="#FFBFBFBF">
     <Window.DataContext>
-        <local:DokoViewModel/>
+        <vw:DokoViewModel/>
     </Window.DataContext>
     <Grid>
-        <Button x:Name="cmdStart" Content="Start Game" Click="Button_Click"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="2*" MinWidth="300px"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*" MinHeight="200"/>
+        </Grid.RowDefinitions>
+        <!-- Log -->
+        <RichTextBox x:Name="txtLog" Grid.Column="2" 
+                     Background="#FF363636" 
+                     Foreground="#FFD9D9D9"
+                     VerticalScrollBarVisibility="Auto"
+                     FontFamily="monospace" Margin="10,10,10,10"/>
+
+        <GridSplitter Width="1" Grid.Column="1" Grid.RowSpan="3" 
+                      HorizontalAlignment="Center"
+                      Background="LightGray" />
+
+        <GridSplitter Height="1" Grid.Row="1" Grid.ColumnSpan="3" 
+                      HorizontalAlignment="Stretch"
+                      Background="LightGray" />
+
+        <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18"/>
+        <!-- Hand Cards -->
+        <controls:HandCardsControl HandCards="{Binding HandImages}"
+                                   Grid.Row="2"/>
+
+        <!-- Command Area -->
+        <Button Content="Start Game" Command="{Binding StartGame}"
+                Grid.Column="2" Grid.Row="2" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom" 
+                Width="80" Height="25" Margin="10,0,0,10"/>
+        <wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
+                           Grid.Column="2" Grid.Row="2" 
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                           Width="80" Height="25" Margin="0,0,15,10"/>
+        <Label Content="Rounds to play:" 
+               Grid.Row="2" Grid.Column="2" 
+               VerticalAlignment="Bottom" HorizontalAlignment="Right" 
+               Height="25" Width="95" Margin="0,0,100,10" />
     </Grid>
 </Window>
