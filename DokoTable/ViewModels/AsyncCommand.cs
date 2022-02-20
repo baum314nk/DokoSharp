@@ -36,10 +36,9 @@ public class AsyncCommand : ICommand
         await ExecuteAsync();
     }
 
-    protected void RaiseCanExecuteChanged()
-    {
-        CommandManager.InvalidateRequerySuggested();
-    }
-
+    //protected void RaiseCanExecuteChanged()
+    //{
+    //    CommandManager.InvalidateRequerySuggested();
+    //}
 }
 

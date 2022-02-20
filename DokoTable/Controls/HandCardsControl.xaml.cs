@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DokoSharp.Lib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,15 +21,54 @@ namespace DokoTable.Controls
     /// </summary>
     public partial class HandCardsControl : UserControl
     {
-        public IEnumerable<BitmapImage>? HandCards
+        public IDictionary<CardBase, BitmapImage>? CardImages
         {
-            get => (IEnumerable<BitmapImage>?)GetValue(HandCardsProperty);
-            set => SetValue(HandCardsProperty, value);
+            get => (IDictionary<CardBase, BitmapImage>?)GetValue(CardImagesProperty);
+            set => SetValue(CardImagesProperty, value);
         }
-        public static readonly DependencyProperty HandCardsProperty =
+        public static readonly DependencyProperty CardImagesProperty =
             DependencyProperty.Register(
-                "HandCards",
-                typeof(IEnumerable<BitmapImage>),
+                "CardImages",
+                typeof(IDictionary<CardBase, BitmapImage>),
+                typeof(HandCardsControl),
+                new PropertyMetadata(null)
+            );
+
+        public IEnumerable<CardBase>? Cards
+        {
+            get => (IEnumerable<CardBase>?)GetValue(CardsProperty);
+            set => SetValue(CardsProperty, value);
+        }
+        public static readonly DependencyProperty CardsProperty =
+            DependencyProperty.Register(
+                "Cards",
+                typeof(IEnumerable<CardBase>),
+                typeof(HandCardsControl),
+                new PropertyMetadata(null)
+            );
+
+        public IEnumerable<CardBase>? SelectableCards
+        {
+            get => (IEnumerable<CardBase>?)GetValue(SelectableCardsProperty);
+            set => SetValue(SelectableCardsProperty, value);
+        }
+        public static readonly DependencyProperty SelectableCardsProperty =
+            DependencyProperty.Register(
+                "SelectableCards",
+                typeof(IEnumerable<CardBase>),
+                typeof(HandCardsControl),
+                new PropertyMetadata(null)
+            );
+
+        public CardBase? SelectedCard
+        {
+            get => (CardBase?)GetValue(SelectedCardProperty);
+            set => SetValue(SelectedCardProperty, value);
+        }
+        public static readonly DependencyProperty SelectedCardProperty =
+            DependencyProperty.Register(
+                "SelectedCard",
+                typeof(CardBase),
                 typeof(HandCardsControl),
                 new PropertyMetadata(null)
             );

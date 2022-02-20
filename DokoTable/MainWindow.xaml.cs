@@ -34,10 +34,15 @@ public partial class MainWindow : Window
         // Setup logging
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Debug(Serilog.Events.LogEventLevel.Debug)
-            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Information)
+            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Debug)
             .CreateLogger();
 
         // Load default card images
-        DokoContext.LoadDefaultImageSet.Execute(null);
+        DokoContext.LoadDefaultImageSetCommand.Execute(null);
+    }
+
+    private void Window_Closed(object sender, EventArgs e)
+    {
+        DokoContext.Dispose();
     }
 }

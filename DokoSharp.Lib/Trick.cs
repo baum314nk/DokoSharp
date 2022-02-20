@@ -59,6 +59,56 @@ public class Trick
 
     #endregion
 
+    #region Events
+
+    public class CardPlacedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who placed the card.
+        /// </summary>
+        public Player Player { get; init; }
+
+        /// <summary>
+        /// The placed card.
+        /// </summary>
+        public Card PlacedCard { get; init; }
+
+        public CardPlacedEventArgs(Player player, Card placedCard)
+        {
+            Player = player;
+            PlacedCard = placedCard;
+        }
+
+    }
+    public delegate void CardPlacedEventHandler(object sender, CardPlacedEventArgs e);
+    public event CardPlacedEventHandler? CardPlaced;
+
+    public class TrickFinishedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who won the trick.
+        /// </summary>
+        public Player Winner { get; init; }
+
+        /// <summary>
+        /// The value of the trick.
+        /// </summary>
+        public int Value { get; init; }
+
+        public TrickFinishedEventArgs(Player winner, int value)
+        {
+            Winner = winner;
+            Value = value;
+        }
+
+    }
+    public delegate void TrickFinishedEventHandler(object sender, TrickFinishedEventArgs e);
+    public event TrickFinishedEventHandler? TrickFinished;
+
+    #endregion
+
+    #region Constructor
+
     /// <summary>
     /// Creates a new trick with the players in the given order.
     /// </summary>
@@ -69,6 +119,8 @@ public class Trick
         _players = playersInOrder.ToArray();
         _cards = new Card?[4];
     }
+
+    #endregion
 
     #region Public Methods
 
@@ -95,12 +147,14 @@ public class Trick
             Card placedCard = player.PlaceCard(this);
             _cards[i] = placedCard;
             Log.Information("Player {player} placed the card {card}.", player.Name, placedCard);
+            CardPlaced?.Invoke(this, new(player, placedCard));
         }
 
         DetermineWinner();
 
         IsRunning = false;
         Log.Information("Trick finished.");
+        TrickFinished?.Invoke(this, new(Winner!, Value));
     }
 
     /// <summary>
@@ -134,7 +188,7 @@ public class Trick
             }
         } else // Color of the first card has to be placed
         {
-            if (card.Base.Color == firstCard.Base.Color)
+            if (card.Base.Color == firstCard.Base.Color && !card.IsTrump)
             {
                 Log.Debug("Valid placing. Player {player} can place {card} on {firstCard}.", player.Name, card, firstCard);
                 return true;
@@ -148,7 +202,7 @@ public class Trick
             }
             else
             {
-                Log.Debug("Invalid placing. Player {player} has a {color} card to place on on {firstCard}.", player.Name, firstCard.Base.Color, firstCard);
+                Log.Debug("Invalid placing. Player {player} has a {color} card to place on {firstCard}.", player.Name, firstCard.Base.Color, firstCard);
                 return false;
             }
         }

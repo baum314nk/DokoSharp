@@ -13,9 +13,14 @@ public class DummyController : IPlayerController
 {
     public static readonly DummyController Instance = new();
 
-    public Card RequestHandCard(Player player)
+    public Card RequestCard(Player player)
     {
-        foreach (var card in player.HandCards)
+        return player.Cards[0];
+    }
+
+    public Card RequestPlaceCard(Player player, Trick trick)
+    {
+        foreach (var card in player.Cards)
         {
             if (player.Game.CurrentRound?.CurrentTrick?.ValidatePlacing(player, card) ?? true)
             {
@@ -34,5 +39,10 @@ public class DummyController : IPlayerController
     public bool RequestYesNo(Player player, string requestText)
     {
         return false;
+    }
+
+    public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards)
+    {
+
     }
 }

@@ -60,7 +60,7 @@ public class Game
     /// The number of rounds that should be played.
     /// Is zero if the game hasn't started.
     /// </summary>
-    public int MaximumRoundNumber { get; protected set; } = 0;
+    public int NumberOfRounds { get; protected set; } = 0;
 
     #endregion
 
@@ -76,6 +76,82 @@ public class Game
 
     #endregion
 
+    #region Events
+
+    public class GameStartedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The number of rounds to play.
+        /// </summary>
+        public int NumberOfRounds { get; init; }
+
+        public GameStartedEventArgs(int numOfRounds)
+        {
+            NumberOfRounds = numOfRounds;
+        }
+
+    }
+    public delegate void GameStartedEventHandler(object sender, GameStartedEventArgs e);
+    public event GameStartedEventHandler? GameStarted;
+
+    public class RoundCreatedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The number of the round in the current game.
+        /// </summary>
+        public int RoundNumber { get; init; }
+
+        /// <summary>
+        /// The created round instance..
+        /// </summary>
+        public Round Round { get; init; }
+
+        public RoundCreatedEventArgs(int roundNumber, Round round)
+        {
+            RoundNumber = roundNumber;
+            Round = round;
+        }
+
+    }
+    public delegate void RoundCreatedEventHandler(object sender, RoundCreatedEventArgs e);
+    public event RoundCreatedEventHandler? RoundCreated;
+
+    public class PointsUpdatedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The changes made to the player points.
+        /// </summary>
+        public IEnumerable<KeyValuePair<Player, int>> PointChanges { get; init; }
+
+        public PointsUpdatedEventArgs(IEnumerable<KeyValuePair<Player, int>> pointChanges)
+        {
+            PointChanges = pointChanges;
+        }
+
+    }
+    public delegate void PointsUpdatedEventHandler(object sender, PointsUpdatedEventArgs e);
+    public event PointsUpdatedEventHandler? PointsUpdated;
+
+    public class GameFinishedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The ranking of the players.
+        /// </summary>
+        public IEnumerable<Player> Ranking { get; init; }
+
+        public GameFinishedEventArgs(IEnumerable<Player> ranking)
+        {
+            Ranking = ranking;
+        }
+
+    }
+    public delegate void GameFinishedEventHandler(object sender, GameFinishedEventArgs e);
+    public event GameFinishedEventHandler? GameFinished;
+
+    #endregion
+
+    #region Constructors
+
     /// <summary>
     /// Creates a new game with the given players.
     /// The players will sit in the order they were passed to this method.
@@ -85,12 +161,15 @@ public class Game
         IEnumerable<SpecialRule> specialRules)
     {
         if (players.Length != 4) throw new ArgumentException("Exactly 4 player names and associated controllers must be provided.", nameof(players));
+        if (players.Select(p => p.Item1).ToHashSet().Count != 4) throw new ArgumentException("All players must have different names.", nameof(players));
 
         SpecialRules = specialRules.ToArray();
-        _players = players.Select(p => new Player(p.Item2, this, p.Item1)).ToArray();
+        _players = players.Select(p => new Player(p.Item2, this, p.Item1)).ToList().Shuffle().ToArray();
         _points = Players.ToDictionary(p => p, _ => 0);
         _finishedRounds = new();
     }
+
+    #endregion
 
     #region Public Methods
 
@@ -105,9 +184,10 @@ public class Game
             Log.Warning("The game is already running or has finished. Aborting.");
         }
 
-        MaximumRoundNumber = numOfRounds;
+        NumberOfRounds = numOfRounds;
         IsRunning = true;
         Log.Information("Game started.");
+        GameStarted?.Invoke(this, new(NumberOfRounds));
 
         // Invoke special rules
         Log.Debug("Call OnGameStarted callback of special rules.");
@@ -115,7 +195,7 @@ public class Game
 
         // Game loop
         int currentStartIdx = 0;
-        while (CurrentRoundNumber != MaximumRoundNumber)
+        while (CurrentRoundNumber != NumberOfRounds)
         {
             // Determine order of players for the round
             Player[] playersInOrder = new Player[4];
@@ -126,13 +206,14 @@ public class Game
             CurrentRoundNumber++;
             CurrentRound = new Round(this, playersInOrder);
             Log.Debug("Created round {i} with starting player {player}", CurrentRoundNumber, playersInOrder[0].Name);
+            RoundCreated?.Invoke(this, new(CurrentRoundNumber, CurrentRound));
 
             // Start the round
             CurrentRound.Start();
 
             var result = CurrentRound.Result!;
             Log.Information("Result of round {i}: \n{result}", CurrentRoundNumber, result);
-            ApplyResult(result);
+            ApplyRoundResult(result);
 
             _finishedRounds.Add(CurrentRound);
             // Next player starts next round
@@ -143,59 +224,77 @@ public class Game
         IsRunning = false;
         IsFinished = true;
         Log.Information("Game finished.");
+
+        // Determine ranking of players based on points
+        var ranking = Points.OrderBy(kv => kv.Value) // Sort by points ascending
+            .Reverse() // Descending
+            .Select(kv => kv.Key); // Select players
+        GameFinished?.Invoke(this, new(ranking));
     }
 
+    #endregion
+
+    #region Private & Protected Methods
+
     /// <summary>
-    /// Applies the given round results to the points table.
+    /// Applies the given round results of the current round to the points table.
     /// </summary>
     /// <param name="result"></param>
-    public void ApplyResult(RoundResult result)
+    protected void ApplyRoundResult(RoundResult result)
     {
-        // Apply results of round
+        List<KeyValuePair<Player, int>> pointChanges = new();
+
+        var reParty = CurrentRound!.Description.ReParty;
+        var contraParty = CurrentRound.Description.ContraParty;
+
+        var winners = result.RePartyWon ? reParty : contraParty;
+        var loosers = result.RePartyWon ? contraParty : reParty;
+
+        // Determine point changes based on results of round
         Log.Debug("Write results of round to points table.");
         if (result.IsSolo)
         {
             if (result.RePartyWon)
             {
-                _points[result.Winners[0]] += 3 * result.BasePoints;
-                Log.Information("{player} won {points}.", result.Winners[0].Name, 3 * result.BasePoints);
-                foreach (var looser in result.Loosers)
+                pointChanges.Add(new(winners[0], 3 * result.BasePoints));
+                Log.Information("{player} won {points}.", winners[0].Name, 3 * result.BasePoints);
+                foreach (var looser in loosers)
                 {
-                    _points[looser] -= result.BasePoints;
+                    pointChanges.Add(new(looser, -result.BasePoints));
                     Log.Information("{player} lost {points}.", looser.Name, result.BasePoints);
                 }
             }
             else
             {
-                _points[result.Loosers[0]] -= 3 * result.BasePoints;
-                Log.Information("{player} lost {points}.", result.Loosers[0].Name, 3 * result.BasePoints);
-                foreach (var winner in result.Winners)
+                pointChanges.Add(new(loosers[0], -3 * result.BasePoints));
+                Log.Information("{player} lost {points}.", loosers[0].Name, 3 * result.BasePoints);
+                foreach (var winner in winners)
                 {
-                    _points[winner] += result.BasePoints;
+                    pointChanges.Add(new(winner, result.BasePoints));
                     Log.Information("{player} won {points}.", winner.Name, result.BasePoints);
                 }
             }
         }
         else
         {
-            foreach (var winner in result.Winners)
+            foreach (var winner in winners)
             {
-                _points[winner] += result.BasePoints;
+                pointChanges.Add(new(winner, result.BasePoints));
                 Log.Information("{player} won {points}.", winner.Name, result.BasePoints);
             }
-            foreach (var looser in result.Loosers)
+            foreach (var looser in loosers)
             {
-                _points[looser] -= result.BasePoints;
+                pointChanges.Add(new(looser, -result.BasePoints));
                 Log.Information("{player} lost {points}.", looser.Name, result.BasePoints);
             }
         }
 
-
-        //if (Points.Values.Sum() != 0)
-        //{
-        //    Log.Debug("ERROR");
-        //}
+        // Apply changes
+        pointChanges.ForEach(pc => _points[pc.Key] += pc.Value);
+        // Invoke PointsUpdatedEvent
+        PointsUpdated?.Invoke(this, new(pointChanges));
     }
 
     #endregion
+
 }

@@ -11,6 +11,7 @@ using Serilog;
 using System.Windows.Media.Imaging;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using DokoSharp.Lib;
 
 namespace DokoTable.ViewModels;
 
@@ -138,7 +139,7 @@ public class ImageLoader
     /// <param name="setName"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public IEnumerable<KeyValuePair<string, BitmapImage>> LoadImages(string setName)
+    public IEnumerable<KeyValuePair<CardBase, byte[]>> LoadImages(string setName)
     {
         if (!_imageSetConfigs.TryGetValue(setName, out ImageSetConfig? config))
         {
@@ -164,10 +165,14 @@ public class ImageLoader
                 config.SymbolMap[aliasSymbol] :
                 aliasSymbol;
 
-            // Load bitmap from file
-            var img = new BitmapImage(new Uri(filePath, UriKind.Absolute));
+            var card = CardBase.GetByIdentifier($"{color}_{symbol}");
+            // Skip images for which no card exists
+            if (card == null) continue;
 
-            yield return new KeyValuePair<string, BitmapImage>($"{color}{symbol}", img);
+            // Load image from file
+            var imgRaw = File.ReadAllBytes(filePath);
+
+            yield return new KeyValuePair<CardBase, byte[]>(card, imgRaw);
         }
     }
 }

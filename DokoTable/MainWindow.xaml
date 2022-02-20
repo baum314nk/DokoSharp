@@ -6,7 +6,7 @@
         xmlns:wpf="clr-namespace:Xceed.Wpf.Toolkit;assembly=DotNetProjects.Wpf.Extended.Toolkit"
         xmlns:vw="clr-namespace:DokoTable.ViewModels" xmlns:controls="clr-namespace:DokoTable.Controls"
         mc:Ignorable="d"
-        Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Background="#FFBFBFBF">
+        Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Background="#FFBFBFBF" Closed="Window_Closed">
     <Window.DataContext>
         <vw:DokoViewModel/>
     </Window.DataContext>
@@ -36,23 +36,35 @@
                       HorizontalAlignment="Stretch"
                       Background="LightGray" />
 
-        <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18"/>
+        <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18" Margin="0,0,0,16"/>
+        
+        <!-- Placed Cards -->
+        <controls:HandCardsControl Cards="{Binding PlacedCards}"  CardImages="{Binding CardImages}" Height="220"/>
+        
         <!-- Hand Cards -->
-        <controls:HandCardsControl HandCards="{Binding HandImages}"
+        <controls:HandCardsControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
                                    Grid.Row="2"/>
 
         <!-- Command Area -->
-        <Button Content="Start Game" Command="{Binding StartGame}"
+        <Button Content="Connect" Command="{Binding ConnectCommand}"
                 Grid.Column="2" Grid.Row="2" 
                 HorizontalAlignment="Left" VerticalAlignment="Bottom" 
                 Width="80" Height="25" Margin="10,0,0,10"/>
-        <wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
+        <Label Content="Hostname:" 
+               Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,199,10" HorizontalAlignment="Right"/>
+        <TextBox Text="{Binding ServerHostname}" VerticalContentAlignment="Center"
+                Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,114,10" HorizontalAlignment="Right" Width="80"/>
+        <Label Content="Port:" 
+               Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,75,10" HorizontalAlignment="Right"/>
+        <TextBox Text="{Binding ServerPort}" VerticalContentAlignment="Center"
+                Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,10,10" HorizontalAlignment="Right" Width="60"/>
+        <!--<wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
                            Grid.Column="2" Grid.Row="2" 
                            HorizontalAlignment="Right" VerticalAlignment="Bottom" 
                            Width="80" Height="25" Margin="0,0,15,10"/>
         <Label Content="Rounds to play:" 
                Grid.Row="2" Grid.Column="2" 
                VerticalAlignment="Bottom" HorizontalAlignment="Right" 
-               Height="25" Width="95" Margin="0,0,100,10" />
+               Height="25" Width="95" Margin="0,0,100,10" />-->
     </Grid>
 </Window>

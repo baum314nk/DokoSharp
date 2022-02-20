@@ -12,10 +12,23 @@ namespace DokoSharp.Lib;
 public interface IPlayerController
 {
     /// <summary>
-    /// Requests a hand card from the controller.
+    /// Signals the controller that the player received cards.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="cards"></param>
+    void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards);
+
+    /// <summary>
+    /// Requests a card from the controller to place into a trick.
     /// </summary>
     /// <returns></returns>
-    Card RequestHandCard(Player player);
+    Card RequestPlaceCard(Player player, Trick trick);
+
+    /// <summary>
+    /// Requests a card from the controller.
+    /// </summary>
+    /// <returns></returns>
+    Card RequestCard(Player player);
 
     /// <summary>
     /// Requests a Yes-No decision from the controller.

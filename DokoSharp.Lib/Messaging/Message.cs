@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -12,15 +13,28 @@ namespace DokoSharp.Lib.Messaging;
 /// </summary>
 public abstract class Message
 {
-    [JsonPropertyName("subject")]
-    public string? Subject { get; set; }
+    public static readonly IReadOnlyDictionary<string, Type> SubjectTypes;
 
-    [JsonPropertyName("player_id")]
-    public string? PlayerId { get; set; }
-
-    public Message(string subject, string playerId)
+    static Message()
     {
-        Subject = subject;
-        PlayerId = playerId;
+        var subjectTypes = new Dictionary<string, Type>();
+
+        var assembly = Assembly.GetExecutingAssembly();
+        var msgTypes = assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(Message)));
+        foreach (var msgType in msgTypes)
+        {
+            var subject = (string)msgType.GetField("SUBJECT")!.GetValue(null)!;
+            subjectTypes[subject] = msgType;
+        }
+
+        SubjectTypes = subjectTypes;
+    }
+
+    [JsonInclude]
+    public abstract string? Subject { get; }
+
+    public Message()
+    {
+
     }
 }

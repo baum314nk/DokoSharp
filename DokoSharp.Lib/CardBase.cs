@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DokoSharp.Lib;
+﻿namespace DokoSharp.Lib;
 
 
 /// <summary>
@@ -21,7 +15,7 @@ public enum CardColor
 /// <summary>
 /// Describes a basic card.
 /// </summary>
-public class CardBase
+public class CardBase : IIdentifiable
 {
     #region Static Fields
 
@@ -29,6 +23,37 @@ public class CardBase
     /// A mapping of colors and symbols to the existing card bases.
     /// </summary>
     public static readonly IReadOnlyDictionary<CardColor, IReadOnlyDictionary<string, CardBase>> Existing;
+
+    /// <summary>
+    /// Returns the card base with the given identifier or null if none is found.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public static CardBase? GetByIdentifier(string id)
+    {
+        string[] split = id.Split('_');
+
+        CardColor color = Enum.Parse<CardColor>(split[0]);
+        string symbol = split[1];
+
+        if (Existing.TryGetValue(color, out var nameMap))
+        {
+            return nameMap!.GetValueOrDefault(symbol, null);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the cards bases with the given identifiers.
+    /// Throws an exception if one identifier isn't found.
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
+    public static IEnumerable<CardBase> GetByIdentifiers(IEnumerable<string> ids)
+    {
+        return ids.Select(id => GetByIdentifier(id)!);
+    }
 
     static CardBase()
     {
@@ -60,7 +85,7 @@ public class CardBase
     /// The identifier of the card.
     /// Consists of the concatenation of <see cref="Color"/> and <see cref="Symbol"/>, e.g. EichelA.
     /// </summary>
-    public string Identifier => $"{Color}{Name}";
+    public string Identifier => $"{Color}_{Symbol}";
 
     /// <summary>
     /// The name of the card, e.g. Ass.

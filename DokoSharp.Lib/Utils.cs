@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using DokoSharp.Lib.Messaging;
 using Serilog;
 
 namespace DokoSharp.Lib;
@@ -14,6 +16,21 @@ public static class Utils
 {
     private static readonly Random rng = new();
 
+    public static readonly JsonSerializerOptions DefaultJsonOptions;
+    public static readonly JsonSerializerOptions BeautifyJsonOptions;
+
+    static Utils()
+    {
+        DefaultJsonOptions = new();
+        DefaultJsonOptions.Converters.Add(new MessageJsonConverter());
+        BeautifyJsonOptions = new(DefaultJsonOptions) { WriteIndented = true };
+    }
+
+    public static IEnumerable<string> ToIdentifiers<T>(this IEnumerable<T> identifiables) where T : IIdentifiable
+    {
+        return identifiables.Select(x => x.Identifier);
+    }
+
     public static IList<T> Shuffle<T>(this IList<T> list)
     {
         T[] result = new T[list.Count];
@@ -21,7 +38,7 @@ public static class Utils
         for (int idx = 0; idx < list.Count; idx++)
         {
             int newIdx = rng.Next(list.Count);
-            while(result[newIdx] != null) newIdx = rng.Next(list.Count);
+            while (result[newIdx] != null) newIdx = rng.Next(list.Count);
 
             result[newIdx] = list[idx];
         }

@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DokoTable", "DokoTable\Doko
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DokoSharp.Server", "DokoSharp.Server\DokoSharp.Server.csproj", "{7A674EB3-3B5F-45B2-B0B7-246EA5FB6007}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DokuSharp.Client", "DokuSharp.Client\DokuSharp.Client.csproj", "{14CA4F13-8128-499F-9E02-A0A56CF0E3CD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DokoSharp.Lib", "DokoSharp.Lib\DokoSharp.Lib.csproj", "{B39EE6B4-DEBF-4CE6-BBBE-27214DA19369}"
 EndProject
 Global
@@ -25,10 +23,6 @@ Global
 		{7A674EB3-3B5F-45B2-B0B7-246EA5FB6007}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A674EB3-3B5F-45B2-B0B7-246EA5FB6007}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A674EB3-3B5F-45B2-B0B7-246EA5FB6007}.Release|Any CPU.Build.0 = Release|Any CPU
-		{14CA4F13-8128-499F-9E02-A0A56CF0E3CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{14CA4F13-8128-499F-9E02-A0A56CF0E3CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{14CA4F13-8128-499F-9E02-A0A56CF0E3CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{14CA4F13-8128-499F-9E02-A0A56CF0E3CD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B39EE6B4-DEBF-4CE6-BBBE-27214DA19369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B39EE6B4-DEBF-4CE6-BBBE-27214DA19369}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B39EE6B4-DEBF-4CE6-BBBE-27214DA19369}.Release|Any CPU.ActiveCfg = Release|Any CPU

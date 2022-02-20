@@ -10,11 +10,11 @@ namespace DokoSharp.Lib;
 /// <summary>
 /// Describes a Doko player.
 /// </summary>
-public class Player
+public class Player : IIdentifiable
 {
     #region Fields
 
-    protected List<Card> _handCards;
+    protected List<Card> _cards;
     protected IPlayerController _controller;
 
     #endregion
@@ -34,7 +34,9 @@ public class Player
     /// <summary>
     /// The hand cards of the player.
     /// </summary>
-    public IReadOnlyList<Card> HandCards => _handCards;
+    public IReadOnlyList<Card> Cards => _cards;
+
+    public string Identifier => Name;
 
     #endregion
 
@@ -47,7 +49,7 @@ public class Player
         _controller = controller;
         Game = game;
         Name = name;
-        _handCards = new List<Card>();
+        _cards = new List<Card>();
     }
 
     #region Public Methods
@@ -60,11 +62,12 @@ public class Player
     {
         if (clearOldCards)
         {
-            _handCards.Clear();
+            _cards.Clear();
         }
 
-        _handCards.AddRange(receivedCards);
+        _cards.AddRange(receivedCards);
         Log.Debug("Player {player} received the cards: {cards}.", Name, receivedCards);
+        _controller.SignalReceivedCards(this, receivedCards);
     }
 
     /// <summary>
@@ -73,7 +76,7 @@ public class Player
     /// <returns></returns>
     public bool HasTrumpCard()
     {
-        return HandCards?.Any(c => c.IsTrump) ?? false;
+        return Cards?.Any(c => c.IsTrump) ?? false;
     }
 
     /// <summary>
@@ -83,7 +86,7 @@ public class Player
     /// <returns></returns>
     public bool HasColoredCard(CardColor color)
     {
-        return HandCards?.Any(c => c.Base.Color == color && !c.IsTrump) ?? false;
+        return Cards?.Any(c => c.Base.Color == color && !c.IsTrump) ?? false;
     }
 
     /// <summary>
@@ -104,12 +107,12 @@ public class Player
     /// <returns>The chosen hand card.</returns>
     public Card PlaceCard(Trick trick)
     {
-        if (HandCards is null) throw new Exception("Player can't place a card because his hand is empty.");
+        if (Cards is null) throw new Exception("Player can't place a card because his hand is empty.");
 
         Card? selectedCard = null;
         while (selectedCard is null)
         {
-            Card card = _controller.RequestHandCard(this);
+            Card card = _controller.RequestPlaceCard(this, trick);
 
             if (trick.ValidatePlacing(this, card))
             {
@@ -118,7 +121,7 @@ public class Player
         }
 
         // Remove card from hand and return it
-        _handCards!.Remove(selectedCard);
+        _cards!.Remove(selectedCard);
         return selectedCard;
     }
 
@@ -129,19 +132,19 @@ public class Player
     /// <returns>The chosen hand card.</returns>
     public IEnumerable<Card> DropCards(int amount = 1)
     {
-        if (HandCards is null) throw new Exception("Player can't hand out a card because his hand is empty.");
-        if (HandCards.Count < amount) throw new Exception($"Player can't hand out {amount} cards because he only has {HandCards!.Count} in hand.");
+        if (Cards is null) throw new Exception("Player can't hand out a card because his hand is empty.");
+        if (Cards.Count < amount) throw new Exception($"Player can't hand out {amount} cards because he only has {Cards!.Count} in hand.");
 
         Card[] selectedCards = new Card[amount];
 
         for (int i = 0; i < amount; i++)
         {
-            Card card = _controller.RequestHandCard(this);
+            Card card = _controller.RequestCard(this);
             selectedCards[i] = card;
         }
 
         // Remove cards from hand and return them
-        selectedCards.ForEach(c => _handCards!.Remove(c));
+        selectedCards.ForEach(c => _cards!.Remove(c));
 
         Log.Debug("Player {player} dropped the cards: {cards}.", Name, selectedCards);
         return selectedCards;

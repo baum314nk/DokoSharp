@@ -1,0 +1,1 @@
+& ".\DokoSharp.Client\bin\Debug\net6.0\DokoSharp.Client.exe"

@@ -11,51 +11,85 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Threading;
 using DokoSharp.Lib;
+using DokoSharp.Lib.Messaging;
+using System.IO;
 
 namespace DokoTable.ViewModels;
 
-public class DokoViewModel : IViewModel, INotifyPropertyChanged
+public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
 {
     #region Fields
 
-    private ImageLoader _imageLoader;
-    private Dictionary<string, BitmapImage>? _cardImages;
+    private readonly ImageLoader _imageLoader;
+    private Dictionary<CardBase, BitmapImage> _cardImages;
+
+    private string _serverHostname = "127.0.0.1";
+    private int _serverPort = 1234;
+    private DokoClient? _client;
+    private List<CardBase> _trumpCards;
+    private List<CardBase> _handCards;
+    private List<CardBase> _placedCards;
+    private List<CardBase> _placeableCards;
+    private CardBase? _selectedHandCard;
     private string _infoText = "";
-    private int _roundsToPlay = 4;
+    private int _numberOfRounds = 4;
+    private int _currentRoundNumber = 0;
+    private int _currentTrickNumber = 4;
+    private bool disposedValue;
 
     #endregion
 
     #region Properties
 
     /// <summary>
-    /// The loader for card images.
-    /// </summary>
-    public ImageLoader ImageLoader
-    {
-        get => _imageLoader;
-        protected set
-        {
-            if (value == _imageLoader) return;
-
-            _imageLoader = value;
-            RaisePropertyChanged(nameof(ImageLoader));
-        }
-    }
-
-    /// <summary>
     /// A mapping from card identifiers to images.
     /// </summary>
-    public Dictionary<string, BitmapImage>? CardImages
+    public IReadOnlyDictionary<CardBase, BitmapImage> CardImages
     {
         get => _cardImages;
         protected set
         {
             if (value == _cardImages) return;
 
-            _cardImages = value;
+            _cardImages = new(value);
             RaisePropertyChanged(nameof(CardImages));
         }
     }
+
+    /// <summary>
+    /// The hostname of the server to connect to.
+    /// </summary>
+    public string ServerHostname
+    {
+        get => _serverHostname;
+        set
+        {
+            if (value == _serverHostname) return;
+
+            _serverHostname = value;
+            RaisePropertyChanged(nameof(ServerHostname));
+        }
+    }
+
+    /// <summary>
+    /// The port of the server to connect to.
+    /// </summary>
+    public string ServerPort
+    {
+        get => _serverPort.ToString();
+        set
+        {
+            if (value == ServerPort) return;
+
+            _serverPort = int.Parse(value);
+            RaisePropertyChanged(nameof(ServerPort));
+        }
+    }
+
+    /// <summary>
+    /// The name of the player.
+    /// </summary>
+    public string PlayerName => "player1";
 
     /// <summary>
     /// The information text which is displayed above the hand cards.
@@ -75,15 +109,119 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged
     /// <summary>
     /// The number of rounds of Doko that should be played.
     /// </summary>
-    public int RoundsToPlay
+    public int NumberOfRounds
     {
-        get => _roundsToPlay;
+        get => _numberOfRounds;
         set
         {
-            if (value == _roundsToPlay) return;
+            if (value == _numberOfRounds) return;
 
-            _roundsToPlay = value;
-            RaisePropertyChanged(nameof(RoundsToPlay));
+            _numberOfRounds = value;
+            RaisePropertyChanged(nameof(NumberOfRounds));
+        }
+    }
+
+    /// <summary>
+    /// The number of the current Doko round.
+    /// </summary>
+    public int CurrentRoundNumber
+    {
+        get => _currentRoundNumber;
+        set
+        {
+            if (value == _currentRoundNumber) return;
+
+            _currentRoundNumber = value;
+            RaisePropertyChanged(nameof(CurrentRoundNumber));
+        }
+    }
+
+    /// <summary>
+    /// The number of the current Doko trick.
+    /// </summary>
+    public int CurrentTrickNumber
+    {
+        get => _currentTrickNumber;
+        set
+        {
+            if (value == _currentTrickNumber) return;
+
+            _currentTrickNumber = value;
+            RaisePropertyChanged(nameof(CurrentTrickNumber));
+        }
+    }
+
+    public IReadOnlyList<CardBase> TrumpCards
+    {
+        get => _trumpCards;
+        protected set
+        {
+            if (_trumpCards == value) return;
+
+            _trumpCards = new(value);
+            RaisePropertyChanged(nameof(TrumpCards));
+            SortHandCards();
+        }
+    }
+
+    /// <summary>
+    /// The hand cards of the player.
+    /// </summary>
+    public IReadOnlyList<CardBase> HandCards
+    {
+        get => _handCards;
+        protected set
+        {
+            if (_handCards == value) return;
+
+            _handCards = new(value);
+            RaisePropertyChanged(nameof(HandCards));
+        }
+    }
+
+    /// <summary>
+    /// The already placed cards of the trick.
+    /// </summary>
+    public IReadOnlyList<CardBase> PlacedCards
+    {
+        get => _placedCards;
+        protected set
+        {
+            if (_placedCards == value) return;
+
+            _placedCards = new(value);
+            RaisePropertyChanged(nameof(PlacedCards));
+        }
+    }
+
+    /// <summary>
+    /// An enumeration of all cards that can be placed on the already placed cards.
+    /// </summary>
+    public IEnumerable<CardBase> PlaceableHandCards
+    {
+        get => _placeableCards;
+        protected set
+        {
+            if (_placeableCards == value) return;
+
+            _placeableCards = new(value);
+            RaisePropertyChanged(nameof(PlaceableHandCards));
+        }
+    }
+
+    /// <summary>
+    /// The currently selected hand card.
+    /// </summary>
+    public CardBase? SelectedHandCard
+    {
+        get => _selectedHandCard;
+        set
+        {
+            if (_selectedHandCard == value) return;
+
+            _selectedHandCard = value;
+            _client!.SelectedCard = value;
+            RaisePropertyChanged(nameof(SelectedHandCard));
         }
     }
 
@@ -91,33 +229,57 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged
 
     #region Commands
 
-    public ICommand LoadDefaultImageSet { get; init; }
+    public ICommand LoadDefaultImageSetCommand { get; init; }
     private async Task DoLoadDefaultImageSet()
     {
-        await Task.Run(async () =>
-        {
-            await ImageLoader.DetectImageSetsAsync();
-
-            var setName = ImageLoader.AvailableSets.First();
-            var images = ImageLoader.LoadImages(setName);
-            BeginInvoke(() => CardImages = new(images));
-        });
+        await DoDetectImageSets();
+        var setName = _imageLoader.AvailableSets.First();
+        await DoLoadImageSet(setName);
     }
 
-    public ICommand LoadImageSet { get; init; }
-    private async Task DoLoadImageSet()
+    //public ICommand LoadImageSet { get; init; }
+    private async Task DoLoadImageSet(string setName)
     {
-        await Task.Run(() =>
+        var rawImages = await Task.Run(() => _imageLoader.LoadImages(setName));
+
+        // Create BitmapImages from bytes
+        // Needs to be done on UI thread
+        var images = new Dictionary<CardBase, BitmapImage>();
+        foreach (var kv in rawImages)
         {
-            var images = new Dictionary<string, BitmapImage>(ImageLoader.LoadImages(ImageLoader.AvailableSets.First()));
-            BeginInvoke(() => CardImages = images);
-        });
+            var rawImg = kv.Value;
+
+            var img = new BitmapImage();
+            using (var ms = new MemoryStream(rawImg))
+            {
+                img.BeginInit();
+                img.CacheOption = BitmapCacheOption.OnLoad;
+                img.StreamSource = ms;
+                img.EndInit();
+            }
+
+            images[kv.Key] = img;
+        }
+        CardImages = images;
+
+        Log.Information("Loaded image set \"{setName}\"", setName);
     }
 
-    public ICommand DetectImageSets { get; init; }
+    public ICommand DetectImageSetsCommand { get; init; }
     private async Task DoDetectImageSets()
     {
-        await Task.Run(ImageLoader.DetectImageSetsAsync);
+        await Task.Run(_imageLoader.DetectImageSetsAsync);
+
+        Log.Information("Detected image sets: {set}", _imageLoader.AvailableSets);
+    }
+
+    public ICommand ConnectCommand { get; init; }
+    private void DoConnect()
+    {
+        _client = new DokoClient(ServerHostname, _serverPort);
+        _client.MessageReceived += (sender, e) => BeginInvoke(() => Client_MessageReceived(sender, e));
+
+        _client.Start();
     }
 
     #endregion
@@ -126,12 +288,151 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged
     {
         _dispatcher = Dispatcher.CurrentDispatcher;
 
-        // Load default image set
         _imageLoader = new();
+        _cardImages = new();
+        _trumpCards = new();
+        _handCards = new();
+        _placedCards = new();
+        _placeableCards = new();
 
-        LoadDefaultImageSet = new AsyncCommand(DoLoadDefaultImageSet);
-        LoadImageSet = new AsyncCommand(DoLoadImageSet, () => ImageLoader.AvailableSets.Count > 0);
-        DetectImageSets = new AsyncCommand(DoDetectImageSets);
+        LoadDefaultImageSetCommand = new AsyncCommand(DoLoadDefaultImageSet);
+        //LoadImageSet = new RelayCommand<string>((setName) => DoLoadImageSet(setName!), (setName) => _imageLoader.AvailableSets.Contains(setName ?? string.Empty));
+        DetectImageSetsCommand = new AsyncCommand(DoDetectImageSets);
+        ConnectCommand = new SimpleCommand(DoConnect, () => _client == null);
+    }
+
+    private void Client_MessageReceived(object sender, DokoClient.MessageEventArgs e)
+    {
+        switch (e.Message)
+        {
+            case GameCreatedMessage msg:
+                Log.Information("Doko game was created by the server. Players are {players}. The special rules are {sr}", msg.Players, msg.SpecialRules);
+                break;
+            case GameStartedMessage msg:
+                Log.Information("Doko game has started. {nor} rounds will be played.", msg.NumberOfRounds);
+                break;
+            case RoundCreatedMessage msg:
+                Log.Information("Round {rn} was created. Player order is {order}.", msg.RoundNumber, msg.PlayerOrder);
+                break;
+            case RoundStartedMessage msg:
+                Log.Information("Round has started. Trump ranking is {tr}.", msg.TrumpRanking);
+                break;
+            case ReceivedCardsMessage msg:
+                Client_ReceivedCardsMessage(msg);
+                break;
+            case ReservationsPerformedMessage msg:
+                Log.Information("Reservations have been performed. Active reservation is {tr}.", msg.ActiveReservation ?? "none");
+                break;
+            case RegistrationsAppliedMessage msg:
+                Client_RegistrationsAppliedMessage(msg);
+                break;
+            case TrickCreatedMessage msg:
+                Log.Information("Trick {tn} was created. Player order is {order}.", msg.TrickNumber, msg.PlayerOrder);
+                break;
+            case CardPlacedMessage msg:
+                Client_CardPlacedMessage(msg);
+                break;
+            case TrickFinishedMessage msg:
+                PlacedCards = new List<CardBase>();
+                PlaceableHandCards = new List<CardBase>();
+                Log.Information("Trick has finished. Winner of {value} value is {winner}.", msg.Value, msg.Winner);
+                break;
+            case RoundFinishedMessage msg:
+                HandCards = new List<CardBase>();
+                TrumpCards = new List<CardBase>();
+                Log.Information("Round has finished. Winner of {points} is {winner}. Re party are {reParty} with {reValue} total value and additional points {rePoints}. Contra party are {contraParty} with {contraValue} total value and additional points {contraPoints}.",
+                    msg.BasePoints,
+                    ((bool)msg.RePartyWon!) ? "Re party" : "Contra party",
+                    msg.ReParty, msg.ReValue, msg.ReAdditionalPoints,
+                    msg.ContraParty, msg.ContraValue, msg.ContraAdditionalPoints
+                );
+                break;
+            case PointsUpdatedMessage msg:
+                Log.Information("Player points where updated: {updates}", msg.PointChanges);
+                break;
+            case GameFinishedMessage msg:
+                Log.Information("Doko game has finished. The finial ranking is {ranking}.", msg.Ranking);
+                break;
+        }
+
+        InformationText = e.Message.Subject!;
+    }
+
+    private void Client_ReceivedCardsMessage(ReceivedCardsMessage msg)
+    {
+        Log.Information("Received hand cards: {cards}", msg.ReceivedCards);
+        var receivedCards = msg.ReceivedCards!.Select(id => CardBase.GetByIdentifier(id)!);
+
+        var newHandCards = HandCards.Concat(receivedCards).ToList();
+        HandCards = newHandCards;
+        SortHandCards();
+    }
+
+    private void Client_RegistrationsAppliedMessage(RegistrationsAppliedMessage msg)
+    {
+        Log.Information("Registrations have been performed. Trump ranking is {tr}.", msg.TrumpRanking);
+
+        TrumpCards = CardBase.GetByIdentifiers(msg.TrumpRanking!).ToList();
+    }
+
+    private void Client_CardPlacedMessage(CardPlacedMessage msg)
+    {
+        Log.Information("Player {player} placed {card}.", msg.Player, msg.PlacedCard);
+
+        var card = CardBase.GetByIdentifier(msg.PlacedCard!)!;
+        PlacedCards = PlacedCards.Append(card).ToList();
+
+        // Re-evaluate placeable hand cards
+        if (PlaceableHandCards.Count() == 1)
+        {
+            PlaceableHandCards = GetPlaceableHandCards();
+        }
+        // De-select card & remove it from hand if self placed it
+        if (msg.Player == PlayerName)
+        {
+            SelectedHandCard = null;
+            RemoveHandCard(card);
+        }
+    }
+
+    private IEnumerable<CardBase> GetPlaceableHandCards()
+    {
+        if (PlacedCards.Count == 0) return HandCards;
+
+        var firstCard = PlacedCards[0];
+
+        if (TrumpCards.Contains(firstCard))
+        {
+            var trump = HandCards.Where(c => TrumpCards.Contains(c));
+
+            // Only trump can be placed on trump
+            if (trump.Any()) return trump;
+            // ... except when player has none
+            else return HandCards;
+        }
+        else
+        {
+            CardColor color = firstCard.Color;
+            var colored = HandCards.Where(c => c.Color == color && !TrumpCards.Contains(c));
+
+            // Same color has to be placed
+            if (colored.Any()) return colored;
+            // ... except when player has none
+            else return HandCards;
+        }
+    }
+
+    private void SortHandCards()
+    {
+        HandCards = HandCards.OrderByDescending(c => TrumpCards.IndexOf(c)).ThenBy(c => c.Color).ThenBy(c => c.Value).ToList();
+    }
+
+    private void RemoveHandCard(CardBase card)
+    {
+        var cardIdx = HandCards.IndexOf(card);
+
+        var newHandCards = HandCards.Take(cardIdx).Concat(HandCards.Skip(cardIdx + 1)).ToList();
+        HandCards = newHandCards;
     }
 
     #region Overrides & Implementations
@@ -149,12 +450,36 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged
 
     public void Invoke(Action action)
     {
-        this._dispatcher.Invoke(action);
+        _dispatcher.Invoke(action);
     }
 
     public void BeginInvoke(Action action)
     {
         _dispatcher.BeginInvoke(action);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                _client?.Dispose();
+            }
+
+            // TODO: set large fields to null
+            _client = null;
+            _cardImages.Clear();
+            _handCards.Clear();
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion

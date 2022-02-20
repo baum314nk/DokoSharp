@@ -27,21 +27,20 @@ public enum Announcement
 public record RoundResult
 {
     /// <summary>
-    /// The players that won the round.
+    /// Is true if the Re party won, otherwise false.
     /// </summary>
-    public Player[] Winners { get; init; }
+    public bool RePartyWon { get; init; }
+
     /// <summary>
-    /// The total value of the winners.
+    /// The total value of the Re party.
     /// </summary>
-    public int WinnerValue { get; init; }
+    public int ReValue { get; init; }
+
     /// <summary>
-    /// The players that lost the round.
+    /// The total value of the Contra party.
     /// </summary>
-    public Player[] Loosers { get; init; }
-    /// <summary>
-    /// The total value of the loosers.
-    /// </summary>
-    public int LooserValue { get; init; }
+    public int ContraValue { get; init; }
+
     /// <summary>
     /// The points that were rewarded for the round.
     /// If the round was a solo, corresponds to the asbolute points the opponents will receive.
@@ -51,21 +50,15 @@ public record RoundResult
     /// <summary>
     /// Is true if the round was a solo, otherwise false.
     /// </summary>
-    public bool IsSolo => Winners.Length == 1 || Loosers.Length == 1;
+    public bool IsSolo { get; init; }
 
-    /// <summary>
-    /// Is true if the Re party won, otherwise false.
-    /// </summary>
-    public bool RePartyWon { get; init; }
-
-    public RoundResult(IEnumerable<Player> winners, int winnerValue, IEnumerable<Player> loosers, int looserValue, int points, bool rePartyWon)
+    public RoundResult(bool rePartyWon, int reValue, int contraValue, int basePoints, bool isSolo)
     {
-        Winners = winners.ToArray();
-        WinnerValue = winnerValue;
-        Loosers = loosers.ToArray();
-        LooserValue = looserValue;
-        BasePoints = points;
         RePartyWon = rePartyWon;
+        ReValue = reValue;
+        ContraValue = contraValue;
+        BasePoints = basePoints;
+        IsSolo = isSolo;
     }
 }
 
@@ -228,6 +221,98 @@ public class Round
 
     #endregion
 
+    #region Events
+
+    public class RoundStartedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The ranking of trump cards in the round.
+        /// </summary>
+        public IEnumerable<CardBase> TrumpRanking { get; init; }
+
+        public RoundStartedEventArgs(IEnumerable<CardBase> trumpRanking)
+        {
+            TrumpRanking = trumpRanking;
+        }
+
+    }
+    public delegate void RoundStartedEventHandler(object sender, RoundStartedEventArgs e);
+    public event RoundStartedEventHandler? RoundStarted;
+
+    public class ReservationsPerformedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The active reservation of the current game.
+        /// </summary>
+        public Reservation? ActiveReservation { get; init; }
+
+        public ReservationsPerformedEventArgs(Reservation? activeReservation)
+        {
+            ActiveReservation = activeReservation;
+        }
+
+    }
+    public delegate void ReservationsPerformedEventHandler(object sender, ReservationsPerformedEventArgs e);
+    public event ReservationsPerformedEventHandler? ReservationsPerformed;
+
+    public class RegistrationsAppliedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The ranking of trump cards in the round.
+        /// </summary>
+        public IEnumerable<CardBase> TrumpRanking { get; init; }
+
+        public RegistrationsAppliedEventArgs(IEnumerable<CardBase> trumpRanking)
+        {
+            TrumpRanking = trumpRanking;
+        }
+    }
+    public delegate void RegistrationsAppliedEventHandler(object sender, RegistrationsAppliedEventArgs e);
+    public event RegistrationsAppliedEventHandler? RegistrationsApplied;
+
+    public class TrickCreatedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The number of the trick in the current round.
+        /// </summary>
+        public int TrickNumber { get; init; }
+
+        /// <summary>
+        /// The created trick instance.
+        /// </summary>
+        public Trick Trick { get; init; }
+
+        public TrickCreatedEventArgs(int trickNumber, Trick trick)
+        {
+            TrickNumber = trickNumber;
+            Trick = trick;
+        }
+
+    }
+    public delegate void TrickCreatedEventHandler(object sender, TrickCreatedEventArgs e);
+    public event TrickCreatedEventHandler? TrickCreated;
+
+    public class RoundFinishedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The result of the round.
+        /// </summary>
+        public RoundResult Result { get; init; }
+
+        public RoundFinishedEventArgs(RoundResult result)
+        {
+            Result = result;
+        }
+
+    }
+    public delegate void RoundFinishedEventHandler(object sender, RoundFinishedEventArgs e);
+    public event RoundFinishedEventHandler? RoundFinished;
+
+
+    #endregion
+
+    #region Constructor
+
     /// <summary>
     /// Creates a new round of Doko with players in the given order.
     /// </summary>
@@ -239,6 +324,8 @@ public class Round
         _players = playersInOrder.ToArray();
         _finishedTricks = new Trick[12];
     }
+
+    #endregion
 
     #region Public Methods
 
@@ -259,6 +346,9 @@ public class Round
         Log.Debug("Call OnRoundStarted callback of special rules.");
         Game.SpecialRules.ForEach(rule => rule.OnRoundStarted?.Invoke(this));
 
+        // Invoke RoundStarted event
+        RoundStarted?.Invoke(this, new(Description.TrumpRanking));
+
         // Give hand cards and perform reservations
         bool giveHandsAgain = true;
         while (giveHandsAgain)
@@ -269,10 +359,13 @@ public class Round
 
             PerformReservations();
             giveHandsAgain = Description.ActiveReservation?.Type == ReservationType.GiveHandsAgain;
+            // Invoke ReservationsPerformed event
+            ReservationsPerformed?.Invoke(this, new(Description.ActiveReservation));
         }
         // Invoke special rules
-        Log.Debug("Call OnReservationsPerformed callback of special rules.");
-        Game.SpecialRules.ForEach(rule => rule.OnReservationsPerformed?.Invoke(this));
+        Log.Debug("Call OnApplyRegistrations callback of special rules.");
+        Game.SpecialRules.ForEach(rule => rule.OnApplyRegistrations?.Invoke(this));
+        RegistrationsApplied?.Invoke(this, new(Description.TrumpRanking));
 
         // Do all 12 tricks
         int currentStartIdx = 0;
@@ -287,7 +380,8 @@ public class Round
             CurrentTrickNumber++;
             CurrentTrick = new(this, playersInOrder);
             Log.Debug("Created trick {i} with starting player {player}", CurrentTrickNumber, playersInOrder[0].Name);
-            
+            TrickCreated?.Invoke(this, new(CurrentTrickNumber, CurrentTrick));
+
             CurrentTrick.Start();
 
             // Add trick to finished tricks
@@ -305,6 +399,7 @@ public class Round
         DetermineResult();
         IsRunning = false;
         Log.Information("Round finished.");
+        RoundFinished?.Invoke(this, new(Result!));
     }
 
     #endregion
@@ -426,10 +521,10 @@ public class Round
         int basePoints = (reValue > contraValue) ? rePoints - contraPoints : contraPoints - rePoints;
         if (reValue > contraValue)
         {
-            Result = new(Description.ReParty, reValue, Description.ContraParty, contraValue, basePoints, true);
+            Result = new(true, reValue, contraValue, basePoints, Description.IsSolo);
         } else
         {
-            Result = new(Description.ContraParty, contraValue, Description.ReParty, reValue, basePoints, false);
+            Result = new(false, reValue, contraValue, basePoints, Description.IsSolo);
         }
 
         Log.Information("Finished determining results.");

@@ -10,11 +10,12 @@ namespace DokoSharp.Lib;
 /// <summary>
 /// Describes a special rule of a Doko game.
 /// </summary>
-public class SpecialRule
+public class SpecialRule : IIdentifiable
 {
     #region Constants
 
     public static readonly SpecialRule KarlchenRule = new(
+        "Karlchen",
         onTrickFinished: (trick) =>
         {
             var round = trick.Round;
@@ -29,23 +30,24 @@ public class SpecialRule
             // Check if winner placed a Eichel Unter
             if (winnerCard.Base == CardBase.Existing[CardColor.Eichel]["U"])
             {
-                string description = "Karlchen";
-                Log.Information("Player {player} got an additional point because of a {desc}.", winner.Name, description);
+                string name = "Karlchen";
+                Log.Information("Player {player} got an additional point because of a {desc}.", winner.Name, name);
 
 
                 // Add bonus point to winner party
                 if (round.Description.ReParty.Contains(winner))
                 {
-                    round.Description.ReAdditionalPoints.Add(description);
+                    round.Description.ReAdditionalPoints.Add(name);
                 }
                 else
                 {
-                    round.Description.ContraAdditionalPoints.Add(description);
+                    round.Description.ContraAdditionalPoints.Add(name);
                 }
             }
         });
 
     public static readonly SpecialRule DoppelkopfRule = new(
+        "Doppelkopf",
         onTrickFinished: (trick) =>
         {
             var round = trick.Round;
@@ -56,22 +58,23 @@ public class SpecialRule
             // Check if trick contains 4 full cards
             if (trick.Value >= 40)
             {
-                string description = "Doppelkopf";
-                Log.Information("Player {player} got an additional point because of a {desc}.", winner.Name, description);
+                string name = "Doppelkopf";
+                Log.Information("Player {player} got an additional point because of a {desc}.", winner.Name, name);
 
                 // Add bonus point to winner party
                 if (round.Description.ReParty.Contains(winner))
                 {
-                    round.Description.ReAdditionalPoints.Add(description);
+                    round.Description.ReAdditionalPoints.Add(name);
                 }
                 else
                 {
-                    round.Description.ContraAdditionalPoints.Add(description);
+                    round.Description.ContraAdditionalPoints.Add(name);
                 }
             }
         });
 
     public static readonly SpecialRule Herz10Rule = new(
+        "Herz 10 Highest Trump",
         onRoundStarted: (round) =>
         {
             // Make Herz 10 highest trump
@@ -80,7 +83,8 @@ public class SpecialRule
         });
 
     public static readonly SpecialRule SchweinchenRule = new(
-        onReservationsResolved: (round) =>
+        "Schweinchen",
+        onApplyRegistrations: (round) =>
         {
             Player? affectedPlayer = null;
 
@@ -88,7 +92,7 @@ public class SpecialRule
             CardBase schellAss = CardBase.Existing[CardColor.Schell]["A"];
             foreach (Player player in round.PlayersInOrder)
             {
-                int karoAssCount = player.HandCards!.Select(c => c.Base == schellAss ? 1 : 0).Sum();
+                int karoAssCount = player.Cards!.Select(c => c.Base == schellAss ? 1 : 0).Sum();
 
                 if (karoAssCount == 2)
                 {
@@ -111,7 +115,8 @@ public class SpecialRule
         });
 
     public static readonly SpecialRule ArmutRule = new(
-        onReservationsResolved: (round) =>
+        "Armut",
+        onReservationsPerformed: (round) =>
         {
             if (round.Description.ActiveReservation?.Type != ReservationType.Armut) return;
 
@@ -159,6 +164,7 @@ public class SpecialRule
         });
 
     public static readonly SpecialRule HochzeitRule = new(
+        "Hochzeit",
         onTrickFinished: (trick) =>
         {
             var round = trick.Round;
@@ -196,6 +202,17 @@ public class SpecialRule
     #region Properties
 
     /// <summary>
+    /// The name of the rule.
+    /// </summary>
+    public string Name { get; init; }
+
+    /// <summary>
+    /// The identifier of the rule.
+    /// Corresponds to the name
+    /// </summary>
+    public string Identifier => Name;
+
+    /// <summary>
     /// The action that gets performed when the game starts.
     /// </summary>
     public Action<Game>? OnGameStarted { get; init; }
@@ -216,6 +233,11 @@ public class SpecialRule
     public Action<Round>? OnReservationsPerformed { get; init; }
 
     /// <summary>
+    /// The action that gets performed when the registrations are applied.
+    /// </summary>
+    public Action<Round>? OnApplyRegistrations { get; init; }
+
+    /// <summary>
     /// The action that gets performed when a trick has ended.
     /// </summary>
     public Action<Trick>? OnTrickFinished { get; init; }
@@ -223,17 +245,21 @@ public class SpecialRule
     #endregion
 
     public SpecialRule(
+        string name,
         Action<Game>? onGameStarted = null, 
         Action<Round>? onRoundStarted = null,
         Action<Round>? onHandsGiven = null,
-        Action<Round>? onReservationsResolved = null,
+        Action<Round>? onReservationsPerformed = null,
+        Action<Round>? onApplyRegistrations = null,
         Action<Trick>? onTrickFinished = null
         )
     {
+        Name = name;
         OnGameStarted = onGameStarted;
         OnRoundStarted = onRoundStarted;
         OnHandsGiven = onHandsGiven;
-        OnReservationsPerformed = onReservationsResolved;
+        OnReservationsPerformed = onReservationsPerformed;
+        OnApplyRegistrations = onApplyRegistrations;
         OnTrickFinished = onTrickFinished;
     }
 }
