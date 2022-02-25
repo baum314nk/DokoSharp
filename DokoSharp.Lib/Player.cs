@@ -58,11 +58,17 @@ public class Player : IIdentifiable
     /// Lets the player receive hand cards.
     /// Additionaly clears old hand before if requested.
     /// </summary>
-    public void ReceiveCards(IEnumerable<Card> receivedCards)
+    public void ReceiveCards(IEnumerable<Card> receivedCards, bool clearOldCards = false)
     {
+        if (clearOldCards)
+        {
+            _cards.Clear();
+            Log.Debug("Cleared old cards of player {player}.", Name);
+        }
+
         _cards.AddRange(receivedCards);
         Log.Debug("Player {player} received the cards: {cards}.", Name, receivedCards);
-        _controller.SignalReceivedCards(this, receivedCards);
+        _controller.SignalReceivedCards(this, receivedCards, clearOldCards);
     }
 
     /// <summary>

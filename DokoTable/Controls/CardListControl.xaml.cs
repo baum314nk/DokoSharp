@@ -19,7 +19,7 @@ namespace DokoTable.Controls
     /// <summary>
     /// Interaction logic for HandCardsControl.xaml
     /// </summary>
-    public partial class HandCardsControl : UserControl
+    public partial class CardListControl : UserControl
     {
         public IDictionary<CardBase, BitmapImage>? CardImages
         {
@@ -30,7 +30,7 @@ namespace DokoTable.Controls
             DependencyProperty.Register(
                 "CardImages",
                 typeof(IDictionary<CardBase, BitmapImage>),
-                typeof(HandCardsControl),
+                typeof(CardListControl),
                 new PropertyMetadata(null)
             );
 
@@ -43,7 +43,7 @@ namespace DokoTable.Controls
             DependencyProperty.Register(
                 "Cards",
                 typeof(IEnumerable<CardBase>),
-                typeof(HandCardsControl),
+                typeof(CardListControl),
                 new PropertyMetadata(null)
             );
 
@@ -56,7 +56,7 @@ namespace DokoTable.Controls
             DependencyProperty.Register(
                 "SelectableCards",
                 typeof(IEnumerable<CardBase>),
-                typeof(HandCardsControl),
+                typeof(CardListControl),
                 new PropertyMetadata(null)
             );
 
@@ -69,11 +69,11 @@ namespace DokoTable.Controls
             DependencyProperty.Register(
                 "SelectedCard",
                 typeof(CardBase),
-                typeof(HandCardsControl),
+                typeof(CardListControl),
                 new PropertyMetadata(null)
             );
 
-        public HandCardsControl()
+        public CardListControl()
         {
             InitializeComponent();
         }

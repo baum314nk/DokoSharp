@@ -99,7 +99,6 @@ public class ImageLoader
         result.ForEach(c => _imageSetConfigs[c.Name] = c);
     }
 
-
     /// <summary>
     /// Detects valid card sets in the Assets/Cards folder. 
     /// </summary>

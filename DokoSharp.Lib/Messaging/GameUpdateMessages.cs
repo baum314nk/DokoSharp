@@ -148,6 +148,8 @@ public class CardsReceivedMessage : Message
     public override string Subject => SUBJECT;
 
     public IList<string>? ReceivedCards { get; set; }
+
+    public bool ClearedOldCards { get; set; }
 }
 
 public class CardsDroppedMessage : Message

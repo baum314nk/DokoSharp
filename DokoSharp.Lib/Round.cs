@@ -349,19 +349,20 @@ public class Round
         RoundStarted?.Invoke(this, new(Description.TrumpRanking));
 
         // Give hand cards and perform reservations
-        bool giveHandsAgain = true;
-        while (giveHandsAgain)
+        while (true)
         {
             GiveHandCards();
             // Invoke special rules
             Game.Rules.ForEach(rule => rule.OnHandsGiven?.Invoke(this));
 
             PerformReservations();
+            if (Description.ActiveReservation?.Name == "Einmischen") continue;
+
             // Invoke special rules
             Game.Rules.ForEach(rule => rule.OnReservationsPerformed?.Invoke(this, Description.ActiveReservation));
             // Invoke ReservationsPerformed event
             ReservationsPerformed?.Invoke(this, new(Description.ActiveReservation));
-            giveHandsAgain = Description.ActiveReservation?.Name == "Einmischen";
+            break;
         }
         // Invoke special rules
         Log.Debug("Call OnApplyRegistrations callback of special rules.");
@@ -422,7 +423,7 @@ public class Round
             Player player = PlayersInOrder[i];
             Card[] handCards = deck[(12 * i)..(12 * (i + 1))];
 
-            player.ReceiveCards(handCards);
+            player.ReceiveCards(handCards, true);
             Log.Information("Gave hand cards to player {player}.", player.Name);
 
             // Assign player to party according to possession of Eichel Ober

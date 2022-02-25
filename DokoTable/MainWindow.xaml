@@ -8,12 +8,14 @@
         xmlns:controls="clr-namespace:DokoTable.Controls"
         xmlns:wds="clr-namespace:DokoTable.ViewModels.WindowDialogService"
         xmlns:dialogs="clr-namespace:DokoTable.Controls.Dialogs"
+        xmlns:conv="clr-namespace:DokoTable.Convertes"
         mc:Ignorable="d"
         Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <wds:WpfWindowDialogService x:Key="dialogService"
                                          ChoiceControlType="{x:Type dialogs:ChoiceControl}"
                                          YesNoControlType="{x:Type dialogs:YesNoControl}"/>
+        <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
     </Window.Resources>
     <Window.Background>
         <ImageBrush ImageSource="/Assets/green_table_texture.jpg" TileMode="FlipXY" ViewportUnits="Absolute" Viewport="0,0,467,612"/>
@@ -28,9 +30,9 @@
             <ColumnDefinition Width="2*" MinWidth="300px"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="3*"/>
+            <RowDefinition Height="3*" MinHeight="220"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto" MinHeight="200"/>
+            <RowDefinition MinHeight="220"/>
         </Grid.RowDefinitions>
         <!-- Log -->
         <RichTextBox x:Name="txtLog" Grid.Column="2" 
@@ -49,26 +51,50 @@
 
         <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18" Margin="0,0,0,16"/>
 
-        <!-- Placed Cards -->
-        <controls:HandCardsControl Cards="{Binding PlacedCards}"  CardImages="{Binding CardImages}" Height="220" HorizontalAlignment="Center" VerticalAlignment="Center" Width="800"/>
-        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*" MinHeight="220"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <!-- Placed Cards -->
+            <controls:CardListControl Cards="{Binding PlacedCards}" CardImages="{Binding CardImages}" Grid.Row="1"
+                                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+        </Grid>
+
         <!-- Hand Cards -->
-        <controls:HandCardsControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" Height="220" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
+        <controls:CardListControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
                                    Grid.Row="2"/>
 
         <!-- Command Area -->
-        <Button Content="Connect" Command="{Binding ConnectCommand}"
-                Grid.Column="2" Grid.Row="2" 
+        <Grid Grid.Row="3" Grid.Column="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <ComboBox x:Name="cmbAvailableImageSets" ItemsSource="{Binding AvailableImageSets}" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="10,10,100,0" />
+            <Button Content="Load Images" Command="{Binding LoadImageSetCommand}" CommandParameter="{Binding SelectedItem, ElementName=cmbAvailableImageSets}"
+                HorizontalAlignment="Right" VerticalAlignment="Top" 
+                Width="80" Height="25" Margin="0,8,10,0"/>
+
+            <Button Content="Connect" Command="{Binding ConnectCommand}"
+                Grid.Row="4" 
                 HorizontalAlignment="Left" VerticalAlignment="Bottom" 
                 Width="80" Height="25" Margin="10,0,0,10"/>
-        <Label Content="Hostname:" 
-               Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,199,10" HorizontalAlignment="Right"/>
-        <TextBox Text="{Binding ServerHostname}" VerticalContentAlignment="Center"
-                Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,114,10" HorizontalAlignment="Right" Width="80"/>
-        <Label Content="Port:" 
-               Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,75,10" HorizontalAlignment="Right"/>
-        <TextBox Text="{Binding ServerPort}" VerticalContentAlignment="Center"
-                Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="0,0,10,10" HorizontalAlignment="Right" Width="60"/>
+            <Label Content="Hostname:" 
+               Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,199,10" HorizontalAlignment="Right"/>
+            <TextBox Text="{Binding ServerHostname}" VerticalContentAlignment="Center"
+                Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,114,10" HorizontalAlignment="Right" Width="80"/>
+            <Label Content="Port:" 
+               Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,75,10" HorizontalAlignment="Right"/>
+            <TextBox Text="{Binding ServerPort}" VerticalContentAlignment="Center"
+                Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,10,10" HorizontalAlignment="Right" Width="60"/>
+
+        </Grid>
         <!--<wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
                            Grid.Column="2" Grid.Row="2" 
                            HorizontalAlignment="Right" VerticalAlignment="Bottom" 

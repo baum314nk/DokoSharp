@@ -19,6 +19,7 @@ using System.Windows.Data;
 using System.Windows;
 using DokoTable.ViewModels.Commands;
 using DokoTable.ViewModels.WindowDialogService;
+using System.Text.Json;
 
 namespace DokoTable.ViewModels;
 
@@ -53,6 +54,11 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
     /// The dialog service used to show dialogs.
     /// </summary>
     public IWindowDialogService? DialogService { get; set; }
+
+    /// <summary>
+    /// The names of the available image sets.
+    /// </summary>
+    public ICollection<string> AvailableImageSets => _imageLoader.AvailableSets.ToList();
 
     /// <summary>
     /// A mapping from card identifiers to images.
@@ -260,11 +266,11 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
     private async Task DoLoadDefaultImageSet()
     {
         await DoDetectImageSets();
-        var setName = _imageLoader.AvailableSets.First();
+        var setName = "Deutsche Kriegsspielkarten"; //_imageLoader.AvailableSets.First();
         await DoLoadImageSet(setName);
     }
 
-    //public ICommand LoadImageSet { get; init; }
+    public ICommand LoadImageSetCommand { get; init; }
     private async Task DoLoadImageSet(string setName)
     {
         var rawImages = await Task.Run(() => _imageLoader.LoadImages(setName));
@@ -297,6 +303,8 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
     {
         await Task.Run(_imageLoader.DetectImageSetsAsync);
 
+        RaisePropertyChanged(nameof(AvailableImageSets));
+
         Log.Information("Detected image sets: {set}", _imageLoader.AvailableSets);
     }
 
@@ -323,7 +331,10 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         _placeableCards = new();
 
         LoadDefaultImageSetCommand = new AsyncCommand(DoLoadDefaultImageSet);
-        //LoadImageSet = new RelayCommand<string>((setName) => DoLoadImageSet(setName!), (setName) => _imageLoader.AvailableSets.Contains(setName ?? string.Empty));
+        LoadImageSetCommand = new RelayCommand<string>(
+            async (setName) => await DoLoadImageSet(setName!), 
+            (setName) => _imageLoader.AvailableSets.Contains(setName ?? string.Empty)
+        );
         DetectImageSetsCommand = new AsyncCommand(DoDetectImageSets);
         ConnectCommand = new SimpleCommand(DoConnect, () => _client == null);
     }
@@ -332,6 +343,8 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
 
     private void Client_MessageReceived(object sender, DokoClient.MessageEventArgs e)
     {
+        Log.Debug("Message received:\n{msg}", JsonSerializer.Serialize(e.Message, Utils.BeautifyJsonOptions));
+
         switch (e.Message)
         {
             // Requests
@@ -341,11 +354,12 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
             case RequestYesNoMessage msg:
                 Client_RequestYesNo(msg);
                 break;
-            case RequestPlaceCardMessage msg:
+            case RequestPlaceCardMessage:
                 Log.Information("Waiting until a valid card is selected.");
                 break;
             case RequestCardsMessage msg:
                 Log.Information("Waiting until a set of {amount} cards is selected.", msg.Amount);
+                Log.Error("The dialog for selecting multiple cards is currently not implemented.");
                 break;
             case RequestReservationMessage msg:
                 Client_RequestReservation(msg);
@@ -409,8 +423,15 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         Log.Information("Received hand cards: {cards}", msg.ReceivedCards);
         var receivedCards = msg.ReceivedCards!.Select(id => CardBase.GetByIdentifier(id)!);
 
-        var newHandCards = HandCards.Concat(receivedCards).ToList();
-        HandCards = newHandCards;
+        if (msg.ClearedOldCards)
+        {
+            HandCards = receivedCards.ToList();
+        }
+        else
+        {
+            HandCards = HandCards.Concat(receivedCards).ToList();
+        }
+
         SortHandCards();
     }
 
@@ -436,6 +457,7 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         // De-select card & remove it from hand if self placed it
         if (msg.Player == PlayerName)
         {
+            SelectedHandCard = null;
             RemoveHandCard(card);
         }
     }

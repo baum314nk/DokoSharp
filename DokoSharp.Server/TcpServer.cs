@@ -114,7 +114,6 @@ public class TcpServer : IDisposable
         IsRunning = false;
     }
 
-
     #region Event Handlers
 
     private void GameCreated()

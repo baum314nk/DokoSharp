@@ -36,7 +36,7 @@ public class DummyController : IPlayerController
         return false;
     }
 
-    public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards)
+    public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards, bool clearedOldCards)
     {
 
     }

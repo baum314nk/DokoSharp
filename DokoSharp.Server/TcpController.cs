@@ -39,12 +39,13 @@ public class TcpController : IPlayerController, IDisposable
         _writer = new(_stream);
     }
 
-    public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards)
+    public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards, bool clearedOldCards)
     {
         // Send message
         SendMessage(new CardsReceivedMessage()
         {
-            ReceivedCards = receivedCards.Select(c => c.Base.Identifier).ToArray()
+            ReceivedCards = receivedCards.Select(c => c.Base.Identifier).ToArray(),
+            ClearedOldCards = clearedOldCards
         });
     }
 
@@ -148,6 +149,8 @@ public class TcpController : IPlayerController, IDisposable
         string msgJson = JsonSerializer.Serialize(msg, Utils.DefaultJsonOptions);
         _writer.WriteLine(msgJson);
         _writer.Flush();
+
+        Log.Debug("Sent message to player {player}:\n{msg}", _client.Client.RemoteEndPoint, JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
     }
 
     /// <summary>

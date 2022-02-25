@@ -1,0 +1,16 @@
+{
+  "name": "Deutsche Flottenkarten",
+  "pattern": "^(?<color>\\w+)_(?<symbol>\\w+)$",
+  "extension":  "jpg",
+  "symbol_names": {
+    "Daus": "A",
+    "Koenig": "K",
+    "Ober": "O",
+    "Unter": "U"
+  },
+  "color_names": {
+    "Gruen": "Blatt",
+    "Rot": "Herz",
+    "Schellen": "Schell"
+  }
+}

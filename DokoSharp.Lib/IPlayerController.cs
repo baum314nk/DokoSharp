@@ -16,7 +16,7 @@ public interface IPlayerController
     /// </summary>
     /// <param name="player"></param>
     /// <param name="cards"></param>
-    void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards);
+    void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards, bool clearedOldCards);
 
     /// <summary>
     /// Signals the controller that the player dropped cards.
