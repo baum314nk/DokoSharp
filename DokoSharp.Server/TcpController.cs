@@ -42,9 +42,18 @@ public class TcpController : IPlayerController, IDisposable
     public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards)
     {
         // Send message
-        SendMessage(new ReceivedCardsMessage()
+        SendMessage(new CardsReceivedMessage()
         {
             ReceivedCards = receivedCards.Select(c => c.Base.Identifier).ToArray()
+        });
+    }
+
+    public void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards)
+    {
+        // Send message
+        SendMessage(new CardsDroppedMessage()
+        {
+            DroppedCards = droppedCards.Select(c => c.Base.Identifier).ToArray()
         });
     }
 
@@ -57,30 +66,77 @@ public class TcpController : IPlayerController, IDisposable
         });
 
         // Wait for reply
-        var reply = ReceiveMessage<ReplyCardMessage>();
+        var reply = ReceiveMessage<ReplyCardsMessage>();
 
-        return player.Cards.First(c => c.Base.Identifier == reply.CardIdentifier!);
+        return player.Cards.First(c => c.Base.Identifier == reply.CardIdentifiers![0]);
     }
 
-    public Card RequestCard(Player player)
+    public IEnumerable<Card> RequestCards(Player player, int amount, string requestText)
+    {
+        IList<string>? cardIds = null;
+        while (cardIds == null || cardIds.Count != amount)
+        {
+            // Send request
+            SendMessage(new RequestCardsMessage()
+            {
+                RequestText = requestText
+            });
+
+            // Wait for reply
+            var reply = ReceiveMessage<ReplyCardsMessage>();
+            cardIds = reply.CardIdentifiers;
+        }
+
+        var result = new Card[amount];
+        for (int i = 0; i < amount; i++)
+        {
+            var id = cardIds[i];
+            result[i] = player.Cards.First(c => c.Base.Identifier == id && !result.Contains(c));
+        }
+
+        return result;
+    }
+
+    public string? RequestReservation(Player player, IEnumerable<string> possibilities)
     {
         // Send request
-        SendMessage(new RequestCardMessage());
+        SendMessage(new RequestReservationMessage()
+        {
+            Possibilities = possibilities.ToArray()
+        });
 
         // Wait for reply
-        var reply = ReceiveMessage<ReplyCardMessage>();
+        var reply = ReceiveMessage<ReplyReservationMessage>();
 
-        return player.Cards.First(c => c.Base.Identifier == reply.CardIdentifier!);
-    }
-
-    public Reservation? RequestReservation(Player player)
-    {
-        return null;
+        return reply.ReservationName;
     }
 
     public bool RequestYesNo(Player player, string requestText)
     {
-        return false;
+        // Send request
+        SendMessage(new RequestYesNoMessage()
+        {
+            RequestText = requestText
+        });
+
+        // Wait for reply
+        var reply = ReceiveMessage<ReplyYesNoMessage>();
+
+        return reply.IsYes;
+    }
+
+    public CardColor RequestColor(Player player, string requestText)
+    {
+        // Send request
+        SendMessage(new RequestColorMessage()
+        {
+            RequestText = requestText
+        });
+
+        // Wait for reply
+        var reply = ReceiveMessage<ReplyColorMessage>();
+
+        return reply.Color;
     }
 
     /// <summary>

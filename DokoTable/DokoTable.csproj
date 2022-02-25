@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\green_table_texture.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.100" />
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.RichTextBox.Wpf" Version="1.1.1-preview.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DokuSharp.Client\DokoSharp.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -181,6 +181,14 @@
     <Content Include="Assets\Cards\FrenchDefault\queen_of_spades.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DokoSharp.Lib\DokoSharp.Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\green_table_texture.jpg" />
   </ItemGroup>
 
 </Project>

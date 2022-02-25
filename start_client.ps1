@@ -1,1 +1,1 @@
-& ".\DokoSharp.Client\bin\Debug\net6.0\DokoSharp.Client.exe"
+& ".\DokoTable\bin\Debug\net6.0-windows\DokoTable.exe"

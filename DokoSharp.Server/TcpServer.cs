@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DokoSharp.Lib;
 using DokoSharp.Lib.Messaging;
+using DokoSharp.Lib.Rulings;
 using Serilog;
 
 namespace DokoSharp.Server;
@@ -14,7 +15,7 @@ namespace DokoSharp.Server;
 /// <summary>
 /// 
 /// </summary>
-public class Server : IDisposable
+public class TcpServer : IDisposable
 {
     #region Fields
 
@@ -47,7 +48,7 @@ public class Server : IDisposable
 
     #endregion
 
-    public Server(string ipAddress, int port)
+    public TcpServer(string ipAddress, int port)
     {
         _server = new(IPAddress.Parse(ipAddress), port);
         _connections = new();
@@ -79,13 +80,14 @@ public class Server : IDisposable
         Game = new(new Tuple<string, IPlayerController>[]
         {
             new("player1", _connections[0]),
-            new("player2", _connections[1]),
+            //new("player2", _connections[1]),
+            new("bot2", DummyController.Instance),
             new("bot3", DummyController.Instance),
             new("bot4", DummyController.Instance),
             //new("player2", _connections[1]),
             //new("player3", _connections[2]),
             //new("player4", _connections[3]),
-        }, SpecialRule.GetDefaults());
+        }, Rule.GetDefaults());
         GameCreated();
 
         // Start game
@@ -120,7 +122,7 @@ public class Server : IDisposable
         SendMessageToAll(new GameCreatedMessage()
         {
             Players = Game!.Players.ToIdentifiers().ToArray(),
-            SpecialRules = Game!.SpecialRules.ToIdentifiers().ToArray(),
+            SpecialRules = Game!.Rules.ToIdentifiers().ToArray(),
         });
 
         Game.GameStarted += Game_GameStarted;
@@ -272,7 +274,7 @@ public class Server : IDisposable
     protected void ConnectionLoop()
     {
         // Wait for enough players
-        while (IsRunning && Connections.Count < 2)
+        while (IsRunning && Connections.Count < 1)
         {
             Log.Information("Waiting for {diff} more players to start the game.", 4 - Connections.Count);
             var client = _server.AcceptTcpClient();
@@ -280,10 +282,10 @@ public class Server : IDisposable
             _connections.Add(new TcpController(client));
         }
 
-        if (Connections.Count == 2)
-        {
+        //if (Connections.Count == 1)
+        //{
             _gameReadyEvent.Set();
-        }
+        //}
     }
 
     #region Overrides & Implementations

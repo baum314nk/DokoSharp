@@ -70,7 +70,7 @@ public class RoundDescription
     /// <summary>
     /// The ascending ranking of trump cards in the round.
     /// </summary>
-    public IList<CardBase> TrumpRanking { get; init; }
+    public IList<CardBase> TrumpRanking { get; set; }
 
     /// <summary>
     /// The active reservation during the round.
@@ -129,8 +129,14 @@ public class RoundDescription
     {
         List<CardBase> result = new();
 
+        // Add Schell
+        foreach (string symbol in new[] { "9", "K", "10", "A" })
+        {
+            result.Add(CardBase.Existing[CardColor.Schell][symbol]);
+        }
+
         // Add Ober and Unter
-        foreach (string symbol in new[] { "O", "U" })
+        foreach (string symbol in new[] { "U", "O" })
         {
             foreach (CardColor color in Enum.GetValues<CardColor>())
             {
@@ -138,14 +144,7 @@ public class RoundDescription
             }
         }
 
-        // Add remaining Schell
-        foreach (string symbol in new[] { "A", "10", "K", "9" })
-        {
-            result.Add(CardBase.Existing[CardColor.Schell][symbol]);
-        }
-
         // Reverse to list so the rank is ascending
-        result.Reverse();
         return result;
     }
 }
@@ -344,7 +343,7 @@ public class Round
 
         // Invoke special rules
         Log.Debug("Call OnRoundStarted callback of special rules.");
-        Game.SpecialRules.ForEach(rule => rule.OnRoundStarted?.Invoke(this));
+        Game.Rules.ForEach(rule => rule.OnRoundStarted?.Invoke(this));
 
         // Invoke RoundStarted event
         RoundStarted?.Invoke(this, new(Description.TrumpRanking));
@@ -355,16 +354,18 @@ public class Round
         {
             GiveHandCards();
             // Invoke special rules
-            Game.SpecialRules.ForEach(rule => rule.OnHandsGiven?.Invoke(this));
+            Game.Rules.ForEach(rule => rule.OnHandsGiven?.Invoke(this));
 
             PerformReservations();
-            giveHandsAgain = Description.ActiveReservation?.Type == ReservationType.GiveHandsAgain;
+            // Invoke special rules
+            Game.Rules.ForEach(rule => rule.OnReservationsPerformed?.Invoke(this, Description.ActiveReservation));
             // Invoke ReservationsPerformed event
             ReservationsPerformed?.Invoke(this, new(Description.ActiveReservation));
+            giveHandsAgain = Description.ActiveReservation?.Name == "Einmischen";
         }
         // Invoke special rules
         Log.Debug("Call OnApplyRegistrations callback of special rules.");
-        Game.SpecialRules.ForEach(rule => rule.OnApplyRegistrations?.Invoke(this));
+        Game.Rules.ForEach(rule => rule.OnApplyRegistrations?.Invoke(this));
         RegistrationsApplied?.Invoke(this, new(Description.TrumpRanking));
 
         // Do all 12 tricks
@@ -388,7 +389,7 @@ public class Round
             _finishedTricks[CurrentTrickNumber - 1] = CurrentTrick;
             // Invoke special rules
             Log.Debug("Call OnTrickEnded callback of special rules.");
-            Game.SpecialRules.ForEach(rule => rule.OnTrickFinished?.Invoke(CurrentTrick));
+            Game.Rules.ForEach(rule => rule.OnTrickFinished?.Invoke(CurrentTrick));
 
             // Winner starts next trick
             Player winner = CurrentTrick.Winner!;
@@ -421,7 +422,7 @@ public class Round
             Player player = PlayersInOrder[i];
             Card[] handCards = deck[(12 * i)..(12 * (i + 1))];
 
-            player.ReceiveCards(handCards, true);
+            player.ReceiveCards(handCards);
             Log.Information("Gave hand cards to player {player}.", player.Name);
 
             // Assign player to party according to possession of Eichel Ober
@@ -450,12 +451,12 @@ public class Round
         for (int i = 0; i < PlayersInOrder.Length; i++)
         {
             Player player = PlayersInOrder[i];
-            Reservation? reservation = player.AnnounceReservation();
+            Reservation? reservation = player.DecideReservation();
             if (reservation is null) Log.Information("Player {player} has no reservation.", player.Name);
             else
             {
                 reservations.Add(reservation);
-                Log.Information("Player {player} has a reservation of type {type}.", player.Name, reservation.Type);
+                Log.Information("Player {player} has a reservation {name}.", player.Name, reservation.Name);
             }
 
         }
@@ -463,10 +464,11 @@ public class Round
         Reservation? activeReservation = null;
         foreach (Reservation reservation in reservations)
         {
-            if (reservation is null) continue;
+            // Ask player if he wants to reveal his reservation
             if (!reservation.Player.DecideYesNo("Reveal you reservation?")) continue;
 
-            if (activeReservation is null || reservation.Type > activeReservation.Type)
+            // Select reservation if its ranked higher than the current one
+            if (activeReservation is null || reservation.Rank > activeReservation.Rank)
             {
                 activeReservation = reservation;
             }
@@ -474,8 +476,8 @@ public class Round
 
         Description.ActiveReservation = activeReservation;        
         if (activeReservation is null) Log.Information("No active reservation set.");
-        else Log.Information("Active reservation is of type {type} by player{player}.", 
-                             activeReservation.Type,
+        else Log.Information("Active reservation is {name} by player{player}.", 
+                             activeReservation.Name,
                              activeReservation.Player.Name);
 
         Log.Information("Finished reservations.");

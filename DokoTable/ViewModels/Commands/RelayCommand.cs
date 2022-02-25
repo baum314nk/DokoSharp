@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace DokoTable.ViewModels;
+namespace DokoTable.ViewModels.Commands;
 
 public class RelayCommand<T> : ICommand
 {

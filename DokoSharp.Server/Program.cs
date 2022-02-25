@@ -16,7 +16,7 @@ if (portStr == string.Empty) portStr = "1234";
 int port = int.Parse(portStr);
 //int port = 1234;
 
-Server server = new(ipAddress, port);
+TcpServer server = new(ipAddress, port);
 server.Start();
 
 Console.ReadLine();

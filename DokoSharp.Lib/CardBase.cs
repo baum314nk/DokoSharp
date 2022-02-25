@@ -6,10 +6,10 @@
 /// </summary>
 public enum CardColor
 {
-    Eichel,
-    Blatt,
-    Herz,
-    Schell
+    Eichel = 3,
+    Blatt = 2,
+    Herz = 1,
+    Schell = 0
 }
 
 /// <summary>

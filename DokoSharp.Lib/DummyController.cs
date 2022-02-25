@@ -13,11 +13,6 @@ public class DummyController : IPlayerController
 {
     public static readonly DummyController Instance = new();
 
-    public Card RequestCard(Player player)
-    {
-        return player.Cards[0];
-    }
-
     public Card RequestPlaceCard(Player player, Trick trick)
     {
         foreach (var card in player.Cards)
@@ -31,7 +26,7 @@ public class DummyController : IPlayerController
         throw new Exception();
     }
 
-    public Reservation? RequestReservation(Player player)
+    public string? RequestReservation(Player player, IEnumerable<string> possibilities)
     {
         return null;
     }
@@ -44,5 +39,20 @@ public class DummyController : IPlayerController
     public void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards)
     {
 
+    }
+
+    public void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards)
+    {
+
+    }
+
+    public IEnumerable<Card> RequestCards(Player player, int amount, string requestText)
+    {
+        return player.Cards.Take(amount);
+    }
+
+    public CardColor RequestColor(Player player, string requestText)
+    {
+        return CardColor.Schell;
     }
 }

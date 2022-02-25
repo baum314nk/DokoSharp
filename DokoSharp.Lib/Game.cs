@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DokoSharp.Lib.Rulings;
 using Serilog;
 
 namespace DokoSharp.Lib;
@@ -25,7 +26,12 @@ public class Game
     /// <summary>
     /// The special rules that apply to the game.
     /// </summary>
-    public IReadOnlyCollection<SpecialRule> SpecialRules { get; protected set; }
+    public IList<Rule> Rules { get; set; }
+
+    /// <summary>
+    /// A mapping of possible reservations the players can have to a list of reservation factories.
+    /// </summary>
+    public IDictionary<string, ReservationFactory> ReservationFactories { get; protected set; }
 
     /// <summary>
     /// The table of points.
@@ -157,13 +163,14 @@ public class Game
     /// The players will sit in the order they were passed to this method.
     /// </summary>
     public Game(
-        Tuple<string, IPlayerController>[] players, 
-        IEnumerable<SpecialRule> specialRules)
+        Tuple<string, IPlayerController>[] players,
+        IEnumerable<Rule> rules)
     {
         if (players.Length != 4) throw new ArgumentException("Exactly 4 player names and associated controllers must be provided.", nameof(players));
         if (players.Select(p => p.Item1).ToHashSet().Count != 4) throw new ArgumentException("All players must have different names.", nameof(players));
 
-        SpecialRules = specialRules.ToArray();
+        Rules = rules.ToArray();
+        ReservationFactories = new Dictionary<string, ReservationFactory>();
         _players = players.Select(p => new Player(p.Item2, this, p.Item1)).ToList().Shuffle().ToArray();
         _points = Players.ToDictionary(p => p, _ => 0);
         _finishedRounds = new();
@@ -191,7 +198,7 @@ public class Game
 
         // Invoke special rules
         Log.Debug("Call OnGameStarted callback of special rules.");
-        SpecialRules.ForEach(rule => rule.OnGameStarted?.Invoke(this));
+        Rules.ForEach(rule => rule.OnGameStarted?.Invoke(this));
 
         // Game loop
         int currentStartIdx = 0;
@@ -230,6 +237,16 @@ public class Game
             .Reverse() // Descending
             .Select(kv => kv.Key); // Select players
         GameFinished?.Invoke(this, new(ranking));
+    }
+
+    /// <summary>
+    /// Adds a reservation factory to the game.
+    /// An existing factories for the same reservation name will be overridden. 
+    /// </summary>
+    /// <param name="factory"></param>
+    public void AddReservationFactory(ReservationFactory factory)
+    {
+        ReservationFactories[factory.ReservationName] = factory;
     }
 
     #endregion

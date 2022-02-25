@@ -11,6 +11,8 @@ using DokoSharp.Lib.Messaging;
 using System.Text.Json;
 using System.Threading;
 using System.IO;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace DokoTable.ViewModels;
 
@@ -23,10 +25,6 @@ public class DokoClient : IDisposable
     private StreamReader? _reader;
     private StreamWriter? _writer;
     private bool disposedValue;
-
-    private readonly AutoResetEvent _cardSelectedEvent = new(false);
-
-    private CardBase? _selectedCard = null;
 
     #endregion
 
@@ -42,17 +40,15 @@ public class DokoClient : IDisposable
     /// </summary>
     public bool IsRunning { get; set; } = false;
 
-    public CardBase? SelectedCard
-    {
-        get => _selectedCard;
-        set
-        {
-            if (_selectedCard == value) return;
+    /// <summary>
+    /// The collection used to communicate the reply values between tasks.
+    /// </summary>
+    public ConcurrentDictionary<string, object?> ReplyValues { get; init; }
 
-            _selectedCard = value;
-            if (_selectedCard != null) _cardSelectedEvent.Set();
-        }
-    }
+    /// <summary>
+    /// The collection used to communicate the reply values between tasks.
+    /// </summary>
+    public AutoResetEvent ReplyValuesUpdated { get; init; }
 
     #endregion
 
@@ -80,6 +76,15 @@ public class DokoClient : IDisposable
     public DokoClient(string ipAddress, int port)
     {
         ServerEndpoint = new(IPAddress.Parse(ipAddress), port);
+        ReplyValues = new(2, new []
+        {
+            new KeyValuePair<string, object?>("PlaceCard", null),
+            new KeyValuePair<string, object?>("Cards", null),
+            new KeyValuePair<string, object?>("Color", null),
+            new KeyValuePair<string, object?>("YesNo", null),
+            new KeyValuePair<string, object?>("Reservation", null),
+        }, null);
+        ReplyValuesUpdated = new(false);
     }
 
     /// <summary>
@@ -146,15 +151,24 @@ public class DokoClient : IDisposable
     {
         while (IsRunning)
         {
-            Message msg = ReceiveMessage<Message>();
+            Message message = ReceiveMessage<Message>();
 
-            switch (msg)
+            switch (message)
             {
-                case RequestCardMessage:
-                    HandleRequestCard();
-                    break;
                 case RequestPlaceCardMessage:
-                    HandleRequestCard();
+                    HandleRequestPlaceCard();
+                    break;
+                case RequestCardsMessage msg:
+                    HandleRequestCards(msg.Amount);
+                    break;
+                case RequestColorMessage:
+                    HandleRequestColor();
+                    break;
+                case RequestYesNoMessage:
+                    HandleRequestYesNo();
+                    break;
+                case RequestReservationMessage msg:
+                    HandleRequestReservation(msg.Possibilities!);
                     break;
             }
         }
@@ -176,7 +190,7 @@ public class DokoClient : IDisposable
             Message? msg = JsonSerializer.Deserialize<Message>(msgJson, Utils.DefaultJsonOptions);
             if (msg != null && msg is T t)
             {
-                Log.Debug("Message received: {msg}", JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
+                Log.Debug("Message received:\n{msg}", JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
                 MessageReceived?.Invoke(this, new(msg));
                 return t;
             }
@@ -187,15 +201,89 @@ public class DokoClient : IDisposable
         }
     }
 
-    private void HandleRequestCard()
+    private void HandleRequestPlaceCard()
     {
-        // Wait until card is selected
-        Log.Information("Waiting until a valid card is selected.");
-        _cardSelectedEvent.WaitOne();
 
-        SendMessage(new ReplyCardMessage()
+        CardBase? placedCard = ReplyValues["PlaceCard"] as CardBase;
+        // If value is unset, we wait until it gets set
+        while (placedCard == null)
         {
-            CardIdentifier = SelectedCard!.Identifier
+            ReplyValuesUpdated.WaitOne();
+            placedCard = ReplyValues["PlaceCard"] as CardBase;
+        }
+        ReplyValues["PlaceCard"] = null;
+
+        SendMessage(new ReplyCardsMessage()
+        {
+            CardIdentifiers = new[] { placedCard.Identifier }
+        });
+    }
+
+    private void HandleRequestCards(int amount)
+    {
+        IList<CardBase>? cards = ReplyValues["Cards"] as IList<CardBase>;
+        // If value is unset, we wait until it gets set and amount matches
+        while (cards == null || cards.Count != amount)
+        {
+            ReplyValuesUpdated.WaitOne();
+            cards = ReplyValues["Cards"] as IList<CardBase>;
+        }
+        ReplyValues["Cards"] = null;
+
+        SendMessage(new ReplyCardsMessage()
+        {
+            CardIdentifiers = cards.ToIdentifiers().ToArray()
+        });
+    }
+
+    private void HandleRequestColor()
+    {
+        CardColor? color = ReplyValues["Color"] as CardColor?;
+        // If value is unset, we wait until it gets set
+        while (color == null)
+        {
+            ReplyValuesUpdated.WaitOne();
+            color = ReplyValues["Color"] as CardColor?;
+        }
+        ReplyValues["Color"] = null;
+
+        SendMessage(new ReplyColorMessage()
+        {
+            Color = (CardColor)color
+        });
+    }
+
+    private void HandleRequestYesNo()
+    {
+        bool? isYes = ReplyValues["YesNo"] as bool?;
+        // If value is unset, we wait until it gets set
+        while (isYes == null)
+        {
+            ReplyValuesUpdated.WaitOne();
+            isYes = ReplyValues["YesNo"] as bool?;
+        }
+        ReplyValues["YesNo"] = null;
+
+        SendMessage(new ReplyYesNoMessage()
+        {
+            IsYes = (bool)isYes
+        });
+    }
+
+    private void HandleRequestReservation(IEnumerable<string> possibilities)
+    {
+        string? reservation = ReplyValues["Reservation"] as string;
+        // If value is unset, we wait until it gets set
+        while (reservation == null || !(reservation == string.Empty || possibilities.Contains(reservation)))
+        {
+            ReplyValuesUpdated.WaitOne();
+            reservation = ReplyValues["Reservation"] as string;
+        }
+        ReplyValues["Reservation"] = null;
+
+        SendMessage(new ReplyReservationMessage()
+        {
+            ReservationName = (reservation == string.Empty) ? null : reservation,
         });
     }
 

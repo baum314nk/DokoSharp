@@ -65,15 +65,6 @@ public class RoundStartedMessage : Message
     public IList<string>? TrumpRanking { get; set; }
 }
 
-public class ReceivedCardsMessage : Message
-{
-    public const string SUBJECT = "UPDATE_ReceivedCards";
-
-    public override string Subject => SUBJECT;
-
-    public IList<string>? ReceivedCards { get; set; }
-}
-
 public class ReservationsPerformedMessage : Message
 {
     public const string SUBJECT = "UPDATE_ReservationsPerformed";
@@ -148,4 +139,22 @@ public class TrickFinishedMessage : Message
     public string? Winner { get; set; }
 
     public int? Value { get; set; }
+}
+
+public class CardsReceivedMessage : Message
+{
+    public const string SUBJECT = "UPDATE_CardsReceived";
+
+    public override string Subject => SUBJECT;
+
+    public IList<string>? ReceivedCards { get; set; }
+}
+
+public class CardsDroppedMessage : Message
+{
+    public const string SUBJECT = "UPDATE_CardsDropped";
+
+    public override string Subject => SUBJECT;
+
+    public IList<string>? DroppedCards { get; set; }
 }

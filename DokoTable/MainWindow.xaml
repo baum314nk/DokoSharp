@@ -4,11 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpf="clr-namespace:Xceed.Wpf.Toolkit;assembly=DotNetProjects.Wpf.Extended.Toolkit"
-        xmlns:vw="clr-namespace:DokoTable.ViewModels" xmlns:controls="clr-namespace:DokoTable.Controls"
+        xmlns:vw="clr-namespace:DokoTable.ViewModels" 
+        xmlns:controls="clr-namespace:DokoTable.Controls"
+        xmlns:wds="clr-namespace:DokoTable.ViewModels.WindowDialogService"
+        xmlns:dialogs="clr-namespace:DokoTable.Controls.Dialogs"
         mc:Ignorable="d"
-        Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Background="#FFBFBFBF" Closed="Window_Closed">
+        Title="DokoTable" Height="900" Width="1600" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <wds:WpfWindowDialogService x:Key="dialogService"
+                                         ChoiceControlType="{x:Type dialogs:ChoiceControl}"
+                                         YesNoControlType="{x:Type dialogs:YesNoControl}"/>
+    </Window.Resources>
+    <Window.Background>
+        <ImageBrush ImageSource="/Assets/green_table_texture.jpg" TileMode="FlipXY" ViewportUnits="Absolute" Viewport="0,0,467,612"/>
+    </Window.Background>
     <Window.DataContext>
-        <vw:DokoViewModel/>
+        <vw:DokoViewModel DialogService="{StaticResource dialogService}"/>
     </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -19,7 +30,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="3*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="1*" MinHeight="200"/>
+            <RowDefinition Height="Auto" MinHeight="200"/>
         </Grid.RowDefinitions>
         <!-- Log -->
         <RichTextBox x:Name="txtLog" Grid.Column="2" 
@@ -37,12 +48,12 @@
                       Background="LightGray" />
 
         <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18" Margin="0,0,0,16"/>
-        
+
         <!-- Placed Cards -->
-        <controls:HandCardsControl Cards="{Binding PlacedCards}"  CardImages="{Binding CardImages}" Height="220"/>
+        <controls:HandCardsControl Cards="{Binding PlacedCards}"  CardImages="{Binding CardImages}" Height="220" HorizontalAlignment="Center" VerticalAlignment="Center" Width="800"/>
         
         <!-- Hand Cards -->
-        <controls:HandCardsControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
+        <controls:HandCardsControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" Height="220" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
                                    Grid.Row="2"/>
 
         <!-- Command Area -->

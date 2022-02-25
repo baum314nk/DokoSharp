@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace DokoTable.ViewModels;
+namespace DokoTable.ViewModels.Commands;
 
 public class AsyncCommand : ICommand
 {

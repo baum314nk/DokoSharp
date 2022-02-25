@@ -58,13 +58,8 @@ public class Player : IIdentifiable
     /// Lets the player receive hand cards.
     /// Additionaly clears old hand before if requested.
     /// </summary>
-    public void ReceiveCards(IEnumerable<Card> receivedCards, bool clearOldCards = false)
+    public void ReceiveCards(IEnumerable<Card> receivedCards)
     {
-        if (clearOldCards)
-        {
-            _cards.Clear();
-        }
-
         _cards.AddRange(receivedCards);
         Log.Debug("Player {player} received the cards: {cards}.", Name, receivedCards);
         _controller.SignalReceivedCards(this, receivedCards);
@@ -130,23 +125,18 @@ public class Player : IIdentifiable
     /// The cards are removed from his hand.
     /// </summary>
     /// <returns>The chosen hand card.</returns>
-    public IEnumerable<Card> DropCards(int amount = 1)
+    public IEnumerable<Card> DropCards(string requestText, int amount = 1)
     {
         if (Cards is null) throw new Exception("Player can't hand out a card because his hand is empty.");
         if (Cards.Count < amount) throw new Exception($"Player can't hand out {amount} cards because he only has {Cards!.Count} in hand.");
 
-        Card[] selectedCards = new Card[amount];
-
-        for (int i = 0; i < amount; i++)
-        {
-            Card card = _controller.RequestCard(this);
-            selectedCards[i] = card;
-        }
+        var selectedCards = _controller.RequestCards(this, amount, requestText);
 
         // Remove cards from hand and return them
         selectedCards.ForEach(c => _cards!.Remove(c));
-
         Log.Debug("Player {player} dropped the cards: {cards}.", Name, selectedCards);
+        _controller.SignalDroppedCards(this, selectedCards);
+
         return selectedCards;
     }
 
@@ -160,11 +150,32 @@ public class Player : IIdentifiable
     }
 
     /// <summary>
+    /// Lets the player decide a color.
+    /// </summary>
+    public CardColor DecideColor(string requestText)
+    {
+        return _controller.RequestColor(this, requestText);
+    }
+
+    /// <summary>
     /// Requests a reservation from the player.
     /// </summary>
-    public Reservation? AnnounceReservation()
+    public Reservation? DecideReservation()
     {
-        return _controller.RequestReservation(this);
+        // Determine possible reservations
+        var possibilities = new List<string>();
+        foreach (var kv in Game.ReservationFactories)
+        {
+            if (kv.Value.CheckPredicate(Cards))
+            {
+                possibilities.Add(kv.Key);
+            }
+        }
+
+        // Let controller decide reservation
+        var name = _controller.RequestReservation(this, possibilities);
+
+        return (name != null) ? Game.ReservationFactories[name].Create(this) : null;
     }
 
     #endregion

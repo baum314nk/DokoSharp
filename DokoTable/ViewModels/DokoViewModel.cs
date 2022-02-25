@@ -13,6 +13,12 @@ using System.Windows.Threading;
 using DokoSharp.Lib;
 using DokoSharp.Lib.Messaging;
 using System.IO;
+using DokoTable.Controls;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows;
+using DokoTable.ViewModels.Commands;
+using DokoTable.ViewModels.WindowDialogService;
 
 namespace DokoTable.ViewModels;
 
@@ -30,16 +36,23 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
     private List<CardBase> _handCards;
     private List<CardBase> _placedCards;
     private List<CardBase> _placeableCards;
-    private CardBase? _selectedHandCard;
     private string _infoText = "";
     private int _numberOfRounds = 4;
     private int _currentRoundNumber = 0;
     private int _currentTrickNumber = 4;
     private bool disposedValue;
 
+    // Reply values
+    private CardBase? _selectedHandCard;
+
     #endregion
 
     #region Properties
+
+    /// <summary>
+    /// The dialog service used to show dialogs.
+    /// </summary>
+    public IWindowDialogService? DialogService { get; set; }
 
     /// <summary>
     /// A mapping from card identifiers to images.
@@ -217,11 +230,25 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         get => _selectedHandCard;
         set
         {
-            if (_selectedHandCard == value) return;
+            //// Skip if value contains same elements
+            //if (SelectedHandCard.Intersect(value).Count() == SelectedHandCard.Count) return;
 
             _selectedHandCard = value;
-            _client!.SelectedCard = value;
             RaisePropertyChanged(nameof(SelectedHandCard));
+
+            // Set in reply values of client if it exists
+            if (_client == null) return;
+            //if (SelectedHandCard.Count == 1)
+            //{
+            _client.ReplyValues["PlaceCard"] = SelectedHandCard;
+            //    _client.ReplyValues["Cards"] = null;
+            //}
+            //else
+            //{
+            //_client.ReplyValues["PlaceCard"] = null;
+            //_client.ReplyValues["Cards"] = SelectedHandCard;
+            //}
+            _client.ReplyValuesUpdated.Set();
         }
     }
 
@@ -301,10 +328,29 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         ConnectCommand = new SimpleCommand(DoConnect, () => _client == null);
     }
 
+    #region Message Handlers
+
     private void Client_MessageReceived(object sender, DokoClient.MessageEventArgs e)
     {
         switch (e.Message)
         {
+            // Requests
+            case RequestColorMessage msg:
+                Client_RequestColor(msg);
+                break;
+            case RequestYesNoMessage msg:
+                Client_RequestYesNo(msg);
+                break;
+            case RequestPlaceCardMessage msg:
+                Log.Information("Waiting until a valid card is selected.");
+                break;
+            case RequestCardsMessage msg:
+                Log.Information("Waiting until a set of {amount} cards is selected.", msg.Amount);
+                break;
+            case RequestReservationMessage msg:
+                Client_RequestReservation(msg);
+                break;
+            // Update
             case GameCreatedMessage msg:
                 Log.Information("Doko game was created by the server. Players are {players}. The special rules are {sr}", msg.Players, msg.SpecialRules);
                 break;
@@ -317,20 +363,20 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
             case RoundStartedMessage msg:
                 Log.Information("Round has started. Trump ranking is {tr}.", msg.TrumpRanking);
                 break;
-            case ReceivedCardsMessage msg:
-                Client_ReceivedCardsMessage(msg);
+            case CardsReceivedMessage msg:
+                Client_ReceivedCards(msg);
                 break;
             case ReservationsPerformedMessage msg:
                 Log.Information("Reservations have been performed. Active reservation is {tr}.", msg.ActiveReservation ?? "none");
                 break;
             case RegistrationsAppliedMessage msg:
-                Client_RegistrationsAppliedMessage(msg);
+                Client_RegistrationsApplied(msg);
                 break;
             case TrickCreatedMessage msg:
                 Log.Information("Trick {tn} was created. Player order is {order}.", msg.TrickNumber, msg.PlayerOrder);
                 break;
             case CardPlacedMessage msg:
-                Client_CardPlacedMessage(msg);
+                Client_CardPlaced(msg);
                 break;
             case TrickFinishedMessage msg:
                 PlacedCards = new List<CardBase>();
@@ -358,7 +404,7 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         InformationText = e.Message.Subject!;
     }
 
-    private void Client_ReceivedCardsMessage(ReceivedCardsMessage msg)
+    private void Client_ReceivedCards(CardsReceivedMessage msg)
     {
         Log.Information("Received hand cards: {cards}", msg.ReceivedCards);
         var receivedCards = msg.ReceivedCards!.Select(id => CardBase.GetByIdentifier(id)!);
@@ -368,32 +414,70 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         SortHandCards();
     }
 
-    private void Client_RegistrationsAppliedMessage(RegistrationsAppliedMessage msg)
+    private void Client_RegistrationsApplied(RegistrationsAppliedMessage msg)
     {
         Log.Information("Registrations have been performed. Trump ranking is {tr}.", msg.TrumpRanking);
 
         TrumpCards = CardBase.GetByIdentifiers(msg.TrumpRanking!).ToList();
     }
 
-    private void Client_CardPlacedMessage(CardPlacedMessage msg)
+    private void Client_CardPlaced(CardPlacedMessage msg)
     {
         Log.Information("Player {player} placed {card}.", msg.Player, msg.PlacedCard);
 
         var card = CardBase.GetByIdentifier(msg.PlacedCard!)!;
         PlacedCards = PlacedCards.Append(card).ToList();
 
-        // Re-evaluate placeable hand cards
-        if (PlaceableHandCards.Count() == 1)
+        // Re-evaluate placeable hand cards if first card was placed
+        if (PlacedCards.Count == 1)
         {
             PlaceableHandCards = GetPlaceableHandCards();
         }
         // De-select card & remove it from hand if self placed it
         if (msg.Player == PlayerName)
         {
-            SelectedHandCard = null;
             RemoveHandCard(card);
         }
     }
+
+    private void Client_RequestColor(RequestColorMessage msg)
+    {
+        Log.Information("Waiting until a color is selected.");
+
+        DialogService!.ShowChoiceDialog(msg.RequestText!, Enum.GetValues<CardColor>(), out CardColor color);
+
+        _client!.ReplyValues["Color"] = color;
+        _client.ReplyValuesUpdated.Set();
+
+        Log.Information("Selected color {color}.", color);
+    }
+
+    private void Client_RequestYesNo(RequestYesNoMessage msg)
+    {
+        Log.Information("Waiting until yes-no decision is made.");
+
+        DialogService!.ShowYesNoDialog(msg.RequestText!, out bool isYes);
+
+        _client!.ReplyValues["YesNo"] = isYes;
+        _client.ReplyValuesUpdated.Set();
+
+        Log.Information("Selected {yesNo}.", isYes ? "yes" : "no");
+    }
+
+    private void Client_RequestReservation(RequestReservationMessage msg)
+    {
+        Log.Information("Waiting until a reservation is selected from the possibilities.");
+
+        DialogService!.ShowChoiceDialog("Please select a reservation", msg.Possibilities!.Prepend(string.Empty), out string reservation);
+
+        _client!.ReplyValues["Reservation"] = reservation;
+        _client.ReplyValuesUpdated.Set();
+
+        if (reservation == string.Empty) Log.Information("Selected no reservation.", reservation);
+        else Log.Information("Selected reservation {reservation}.", reservation);
+    }
+
+    #endregion
 
     private IEnumerable<CardBase> GetPlaceableHandCards()
     {
@@ -424,7 +508,7 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
 
     private void SortHandCards()
     {
-        HandCards = HandCards.OrderByDescending(c => TrumpCards.IndexOf(c)).ThenBy(c => c.Color).ThenBy(c => c.Value).ToList();
+        HandCards = HandCards.OrderBy(c => TrumpCards.IndexOf(c)).ThenBy(c => c.Color).ThenBy(c => c.Value).ToList();
     }
 
     private void RemoveHandCard(CardBase card)

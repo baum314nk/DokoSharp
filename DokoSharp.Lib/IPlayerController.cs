@@ -19,16 +19,23 @@ public interface IPlayerController
     void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards);
 
     /// <summary>
+    /// Signals the controller that the player dropped cards.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="cards"></param>
+    void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards);
+
+    /// <summary>
     /// Requests a card from the controller to place into a trick.
     /// </summary>
     /// <returns></returns>
     Card RequestPlaceCard(Player player, Trick trick);
 
     /// <summary>
-    /// Requests a card from the controller.
+    /// Requests cards from the controller.
     /// </summary>
     /// <returns></returns>
-    Card RequestCard(Player player);
+    IEnumerable<Card> RequestCards(Player player, int amount, string requestText);
 
     /// <summary>
     /// Requests a Yes-No decision from the controller.
@@ -37,8 +44,14 @@ public interface IPlayerController
     bool RequestYesNo(Player player, string requestText);
 
     /// <summary>
+    /// Requests a color from the controller.
+    /// </summary>
+    /// <returns></returns>
+    CardColor RequestColor(Player player, string requestText);
+
+    /// <summary>
     /// Requests a reservation from the controller.
     /// </summary>
     /// <returns></returns>
-    Reservation? RequestReservation(Player player);
+    string? RequestReservation(Player player, IEnumerable<string> possibilities);
 }
