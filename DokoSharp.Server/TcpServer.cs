@@ -110,6 +110,7 @@ public class TcpServer : IDisposable
 
         Log.Information("Stopping the server");
         _connections.ForEach(c => c.Dispose());
+        _connections.Clear();
         _server.Stop();
         IsRunning = false;
     }

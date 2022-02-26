@@ -63,8 +63,9 @@
         </Grid>
 
         <!-- Hand Cards -->
-        <controls:CardListControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
-                                   Grid.Row="2"/>
+        <controls:CardListControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" 
+                                  SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
+                                  Grid.Row="2"/>
 
         <!-- Command Area -->
         <Grid Grid.Row="3" Grid.Column="3">

@@ -12,28 +12,21 @@
     </UserControl.Resources>
     <Grid>
         <ListView ItemsSource="{Binding Cards, ElementName=ThisControl}" SelectedItem="{Binding SelectedCard, ElementName=ThisControl}"
-                  Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                  Margin="5,10,5,9">
+                  Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
+                    <local:FittingPanel />
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Image Margin="5,0,5,0" Stretch="Fill">
+                    <Image Stretch="Fill">
                         <Image.Source>
                             <MultiBinding Converter="{StaticResource imageOfCardConv}">
                                 <Binding Path="CardImages" ElementName="ThisControl" />
                                 <Binding />
                             </MultiBinding>
                         </Image.Source>
-                        <Image.IsHitTestVisible>
-                            <MultiBinding Converter="{StaticResource itemInListConv}">
-                                <Binding Path="SelectableCards" ElementName="ThisControl" />
-                                <Binding />
-                            </MultiBinding>
-                        </Image.IsHitTestVisible>
                     </Image>
                 </DataTemplate>
             </ListView.ItemTemplate>

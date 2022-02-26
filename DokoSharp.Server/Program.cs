@@ -17,6 +17,18 @@ int port = int.Parse(portStr);
 //int port = 1234;
 
 TcpServer server = new(ipAddress, port);
-server.Start();
-
-Console.ReadLine();
+while(true)
+{
+    try
+    {
+        server.Start();
+    } catch (Exception ex)
+    {
+        Log.Error(ex.Message);
+    }
+    finally
+    {
+        server.Stop();
+        Log.Information("Restarting the server...");
+    }
+}
