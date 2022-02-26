@@ -1,7 +1,7 @@
 {
   "name": "Deutsche Kriegsspielkarten",
   "pattern": "^DKS_(?<color>\\w+)_(?<symbol>\\w+)$",
-  "extension":  "jpg",
+  "extension":  "png",
   "symbol_names": {
     "Daus": "A",
     "Koenig": "K",

@@ -44,37 +44,69 @@
     <None Remove="Assets\Cards\DFK\Schellen_Unter.jpg" />
     <None Remove="Assets\Cards\DKS\config.json" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_10.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_10.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_7.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_7.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_8.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_8.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_9.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_9.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_Daus.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_Daus.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_Koenig.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_Koenig.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_Ober.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_Ober.png" />
     <None Remove="Assets\Cards\DKS\DKS_Eichel_Unter.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Eichel_Unter.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_10.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_10.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_7.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_7.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_8.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_8.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_9.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_9.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_Daus.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_Daus.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_Koenig.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_Koenig.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_Ober.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_Ober.png" />
     <None Remove="Assets\Cards\DKS\DKS_Gruen_Unter.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Gruen_Unter.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_10.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_10.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_7.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_7.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_8.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_8.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_9.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_9.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_Daus.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_Daus.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_Koenig.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_Koenig.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_Ober.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_Ober.png" />
     <None Remove="Assets\Cards\DKS\DKS_Rot_Unter.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Rot_Unter.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_10.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_10.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_7.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_7.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_8.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_8.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_9.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_9.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_Daus.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_Daus.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_Koenig.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_Koenig.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_Ober.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_Ober.png" />
     <None Remove="Assets\Cards\DKS\DKS_Schellen_Unter.jpg" />
+    <None Remove="Assets\Cards\DKS\DKS_Schellen_Unter.png" />
     <None Remove="Assets\green_table_texture.jpg" />
   </ItemGroup>
 
@@ -188,100 +220,100 @@
     <Content Include="Assets\Cards\DKS\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_10.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_10.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_7.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_8.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_9.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_9.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_Daus.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_Daus.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_Koenig.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_Koenig.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_Ober.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_Ober.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Eichel_Unter.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Eichel_Unter.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_10.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_10.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_7.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_8.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_9.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_9.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_Daus.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_Daus.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_Koenig.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_Koenig.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_Ober.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_Ober.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Gruen_Unter.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Gruen_Unter.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_10.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_10.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_7.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_8.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_9.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_9.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_Daus.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_Daus.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_Koenig.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_Koenig.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_Ober.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_Ober.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Rot_Unter.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Rot_Unter.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_10.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_10.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_7.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_8.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_9.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_9.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_Daus.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_Daus.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_Koenig.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_Koenig.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_Ober.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_Ober.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Cards\DKS\DKS_Schellen_Unter.jpg">
+    <Content Include="Assets\Cards\DKS\DKS_Schellen_Unter.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Cards\FrenchDefault\10_of_clubs.png">

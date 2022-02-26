@@ -51,6 +51,7 @@ public class WpfWindowDialogService : IWindowDialogService
             Title = title,
             DataContext = content,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Application.Current.MainWindow,
         };
 
         // Return null if dialog was canceled

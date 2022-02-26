@@ -508,30 +508,18 @@ public class Round
         Log.Information("Re party has {value} value.", reValue);
         Log.Information("Contra party has {value} value.", contraValue);
 
-        int rePoints = Description.ReAdditionalPoints.Count;
-        int contraPoints = Description.ContraAdditionalPoints.Count;
+        int lowerValue = (reValue > contraValue) ? contraValue : reValue;
+        var valuePoints = (reValue > contraValue) ? Description.ReAdditionalPoints : Description.ContraAdditionalPoints;
+        if (lowerValue < 90) valuePoints.Add("Unter 90");
+        if (lowerValue < 60) valuePoints.Add("Unter 60");
+        if (lowerValue < 30) valuePoints.Add("Unter 30");
+        if (lowerValue == 0) valuePoints.Add("Schneider");
 
-        int valuePoints = 0;
-        int lowerPoints = (reValue > contraValue) ? contraValue : reValue;
-        if (lowerPoints < 90) valuePoints++;
-        if (lowerPoints < 60) valuePoints++;
-        if (lowerPoints < 30) valuePoints++;
-        if (lowerPoints == 0) valuePoints++;
+        int basePoints = Math.Abs(Description.ReAdditionalPoints.Count - Description.ContraAdditionalPoints.Count);
+        
+        Result = new(reValue > contraValue, reValue, contraValue, basePoints, Description.IsSolo);
 
-        if (reValue > contraValue) rePoints += valuePoints;
-        else contraPoints += valuePoints;
-
-        int basePoints = (reValue > contraValue) ? rePoints - contraPoints : contraPoints - rePoints;
-        if (reValue > contraValue)
-        {
-            Result = new(true, reValue, contraValue, basePoints, Description.IsSolo);
-        } else
-        {
-            Result = new(false, reValue, contraValue, basePoints, Description.IsSolo);
-        }
-
-        Log.Information("Finished determining results.");
-    }
+        Log.Information("Finished determining results.");    }
 
     #endregion
 }
