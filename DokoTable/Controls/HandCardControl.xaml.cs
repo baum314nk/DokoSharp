@@ -84,17 +84,21 @@ public class FittingPanel : Panel
     {
         if (Children.Count == 0) return finalSize;
 
-        if (HoveredChild != null)
+        if (Children[0].DesiredSize.Width * Children.Count < finalSize.Width)
         {
-            return ArrangeHovered(finalSize);
+            return ArrangeSideBySide(finalSize);
+        }
+        else if (HoveredChild != null)
+        {
+            return ArrangeOverlappedHovered(finalSize);
         }
         else
         {
-            return ArrangeNoHovered(finalSize);
+            return ArrangeOverlapped(finalSize);
         }
     }
 
-    protected Size ArrangeHovered(Size finalSize)
+    protected Size ArrangeOverlappedHovered(Size finalSize)
     {
         int hoveredIndex = Children.IndexOf(HoveredChild);
 
@@ -141,10 +145,23 @@ public class FittingPanel : Panel
         return finalSize;
     }
 
-    protected Size ArrangeNoHovered(Size finalSize)
+    protected Size ArrangeOverlapped(Size finalSize)
     {
         double availableWidth = finalSize.Width - Children[0].DesiredSize.Width;
         double offsetPerElement = availableWidth / (Children.Count - 1);
+
+        for (int i = 0; i < Children.Count; i++)
+        {
+            UIElement child = Children[i];
+            child.Arrange(new Rect(offsetPerElement * i, 0, child.DesiredSize.Width, child.DesiredSize.Height));
+        }
+
+        return finalSize;
+    }
+
+    protected Size ArrangeSideBySide(Size finalSize)
+    {
+        double offsetPerElement = Children[0].DesiredSize.Width;
 
         for (int i = 0; i < Children.Count; i++)
         {
