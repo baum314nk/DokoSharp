@@ -106,7 +106,7 @@ public class DokoClient : IDisposable
         } catch(SocketException ex)
         {
             Log.Error("Error while trying to connect to the server: {error}", ex.Message);
-            return;
+            throw ex;
         }
         _stream = _client.GetStream();
         _reader = new(_stream);

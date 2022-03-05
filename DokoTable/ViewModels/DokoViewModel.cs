@@ -20,6 +20,7 @@ using System.Windows;
 using DokoTable.ViewModels.Commands;
 using DokoTable.ViewModels.WindowDialogService;
 using System.Text.Json;
+using System.Net.Sockets;
 
 namespace DokoTable.ViewModels;
 
@@ -314,7 +315,14 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         _client = new DokoClient(ServerHostname, _serverPort);
         _client.MessageReceived += (sender, e) => BeginInvoke(() => Client_MessageReceived(sender, e));
 
-        _client.Start();
+        try
+        {
+            _client.Start();
+        } catch(SocketException)
+        {
+            _client.Dispose();
+            _client = null;
+        }
     }
 
     #endregion
