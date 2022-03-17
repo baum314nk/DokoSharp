@@ -431,7 +431,8 @@ public class Round
             {
                 Description.ReParty.Add(player);
                 Log.Information("Added player {player} to Re party.", player.Name);
-            } else
+            }
+            else
             {
                 Description.ContraParty.Add(player);
                 Log.Information("Added player {player} to Contra party.", player.Name);
@@ -475,9 +476,9 @@ public class Round
             }
         }
 
-        Description.ActiveReservation = activeReservation;        
+        Description.ActiveReservation = activeReservation;
         if (activeReservation is null) Log.Information("No active reservation set.");
-        else Log.Information("Active reservation is {name} by player{player}.", 
+        else Log.Information("Active reservation is {name} by player{player}.",
                              activeReservation.Name,
                              activeReservation.Player.Name);
 
@@ -495,12 +496,13 @@ public class Round
         int reValue = 0;
         int contraValue = 0;
         // Calculate total value of parties
-        foreach(Trick trick in FinishedTricks)
+        foreach (Trick trick in FinishedTricks)
         {
             if (Description.ReParty.Contains(trick.Winner!))
             {
                 reValue += trick.Value;
-            } else
+            }
+            else
             {
                 contraValue += trick.Value;
             }
@@ -508,18 +510,81 @@ public class Round
         Log.Information("Re party has {value} value.", reValue);
         Log.Information("Contra party has {value} value.", contraValue);
 
-        int lowerValue = (reValue > contraValue) ? contraValue : reValue;
-        var valuePoints = (reValue > contraValue) ? Description.ReAdditionalPoints : Description.ContraAdditionalPoints;
-        if (lowerValue < 90) valuePoints.Add("Unter 90");
-        if (lowerValue < 60) valuePoints.Add("Unter 60");
-        if (lowerValue < 30) valuePoints.Add("Unter 30");
-        if (lowerValue == 0) valuePoints.Add("Schneider");
+        List<string> reAnnouncements = new();
+        List<string> contraAnnouncements = new();
 
-        int basePoints = Math.Abs(Description.ReAdditionalPoints.Count - Description.ContraAdditionalPoints.Count);
-        
+        List<string> reValuePoints = new();
+        List<string> contraValuePoints = new();
+
+        // Determine points from announcements
+        var possibleValuePoints = new[] { "Unter 90", "Unter 60", "Unter 30", "Schwarz" };
+        bool reMissedAnnouncement = false;
+        bool contraMissedAnnouncement = false;
+        for (int i = 0; i < possibleValuePoints.Length; i++)
+        {
+            // Check Re value points
+            if (contraValue < (i + 1) * 30) reValuePoints.Add(possibleValuePoints[i]);
+            // Check Contra value points
+            if (reValue < (i + 1) * 30) contraValuePoints.Add(possibleValuePoints[i]);
+
+            var announcement = $"{possibleValuePoints[i]} Angesagt";
+            // Check Re announcements
+            if (reAnnouncements.Contains(announcement))
+            {
+                if (contraValue < (i + 1) * 30) reValuePoints.Add(announcement);
+                else
+                {
+                    contraValuePoints.Add($"{announcement} Abgesagt");
+                    reMissedAnnouncement = true;
+                }
+            }
+            // Check Contra announcements
+            if (contraAnnouncements.Contains(announcement))
+            {
+                if (reValue < (i + 1) * 30) contraValuePoints.Add(announcement);
+                else
+                {
+                    reValuePoints.Add($"{announcement} Abgesagt");
+                    contraMissedAnnouncement = true;
+                }
+            }
+        }
+
+        bool reWins = false;
+        if (reMissedAnnouncement && contraMissedAnnouncement)
+        {
+            reValuePoints.Clear();
+            contraValuePoints.Clear();
+        }
+        else if (reMissedAnnouncement)
+        {
+            contraValuePoints.Add("Gegen die Alten");
+            reValuePoints.Clear();
+        }
+        else if (contraMissedAnnouncement)
+        {
+            contraValuePoints.Clear();
+            reWins = true;
+        }
+        else if (reValue > 120)
+        {
+            contraValuePoints.Clear();
+            reWins = true;
+        }
+        else
+        {
+            contraValuePoints.Add("Gegen die Alten");
+            reValuePoints.Clear();
+        }
+
+        var valuePoints = reWins ? reValuePoints : contraValuePoints;
+        int additionalPoints = (reWins ? 1 : -1) * (Description.ReAdditionalPoints.Count - Description.ContraAdditionalPoints.Count);
+        int basePoints = valuePoints.Count + additionalPoints;
+
         Result = new(reValue > contraValue, reValue, contraValue, basePoints, Description.IsSolo);
 
-        Log.Information("Finished determining results.");    }
+        Log.Information("Finished determining results.");
+    }
 
     #endregion
 }
