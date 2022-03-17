@@ -1,21 +1,21 @@
-﻿<UserControl x:Class="DokoTable.Controls.CardListControl" x:Name="ThisControl"
+﻿<UserControl x:Class="DokoTable.Controls.HandCardControl" x:Name="ThisControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:DokoTable.Controls"
+             xmlns:local="clr-namespace:DokoTable.Controls" 
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="300" d:DesignWidth="800">
     <UserControl.Resources>
         <local:ItemInEnumerableConverter x:Key="itemInListConv"/>
         <local:ImageOfCardConverter x:Key="imageOfCardConv"/>
     </UserControl.Resources>
     <Grid>
-        <ListView ItemsSource="{Binding Cards, ElementName=ThisControl}"
+        <ListView ItemsSource="{Binding Cards, ElementName=ThisControl}" SelectedItem="{Binding SelectedCard, ElementName=ThisControl}"
                   Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
+                    <local:FittingPanel />
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>

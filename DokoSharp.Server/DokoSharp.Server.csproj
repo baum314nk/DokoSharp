@@ -1,11 +1,28 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ReleaseDir>$(SolutionDir)releases\$(MSBuildProjectName)\</ReleaseDir>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
+
+  <Target Name="CopyRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' ">
+    <MakeDir Directories="$(ReleaseDir)" />
+    <ItemGroup>
+      <ReleaseFiles Include="$(OutDir)**\*.*" Exclude="$(OutDir)*.pdb;$(OutDir)*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles -> '$(ReleaseDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+  <Target Name="Zip" AfterTargets="CopyRelease" Condition="'$(Configuration)' == 'Release' ">
+    <ZipDirectory
+      SourceDirectory="$(ReleaseDir)"
+      DestinationFile="$(ReleaseDir)..\$(ProjectName)_$(AssemblyVersion).zip"
+      Overwrite="true"/>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
