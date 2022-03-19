@@ -13,13 +13,13 @@ public class DummyController : IPlayerController
 {
     public static readonly DummyController Instance = new();
 
-    public Card RequestPlaceCard(Player player, Trick trick)
+    public Tuple<Card, Announcement> RequestPlaceCard(Player player, Trick trick, bool canMakeAnnouncement)
     {
         foreach (var card in player.Cards)
         {
             if (player.Game.CurrentRound?.CurrentTrick?.ValidatePlacing(player, card) ?? true)
             {
-                return card;
+                return new(card, Announcement.None);
             }
         }
 

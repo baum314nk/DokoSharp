@@ -8,20 +8,6 @@ using Serilog;
 namespace DokoSharp.Lib;
 
 /// <summary>
-/// An enumeration of Doko announcements.
-/// </summary>
-public enum Announcement
-{
-    None,
-    Re,
-    Contra,
-    Under90,
-    Under60,
-    Under30,
-    Black
-}
-
-/// <summary>
 /// Describes the results of a round.
 /// </summary>
 public record RoundResult
@@ -37,28 +23,34 @@ public record RoundResult
     public int ReValue { get; init; }
 
     /// <summary>
+    /// The points of the Re party.
+    /// </summary>
+    public IList<string> RePoints { get; init; }
+
+    /// <summary>
     /// The total value of the Contra party.
     /// </summary>
     public int ContraValue { get; init; }
 
     /// <summary>
+    /// The points of the Contra party.
+    /// </summary>
+    public IList<string> ContraPoints { get; init; }
+
+    /// <summary>
     /// The points that were rewarded for the round.
-    /// If the round was a solo, corresponds to the asbolute points the opponents will receive.
+    /// If the round was a solo, corresponds to the points each opponent will receive.
     /// </summary>
     public int BasePoints { get; init; }
 
-    /// <summary>
-    /// Is true if the round was a solo, otherwise false.
-    /// </summary>
-    public bool IsSolo { get; init; }
-
-    public RoundResult(bool rePartyWon, int reValue, int contraValue, int basePoints, bool isSolo)
+    public RoundResult(bool rePartyWon, int reValue, IList<string> rePoints, int contraValue, IList<string> contraPoints, int basePoints)
     {
         RePartyWon = rePartyWon;
         ReValue = reValue;
+        RePoints = rePoints;
         ContraValue = contraValue;
+        ContraPoints = contraPoints;
         BasePoints = basePoints;
-        IsSolo = isSolo;
     }
 }
 
@@ -93,6 +85,11 @@ public class RoundDescription
     public Announcement ReAnnouncement { get; set; } = Announcement.None;
 
     /// <summary>
+    /// The number of the last trick in which the Re party can make an announcement.
+    /// </summary>
+    public int LastReAnnouncementNumber { get; set; } = 3;
+
+    /// <summary>
     /// Returns true if the Re party contains only 1 member.
     /// </summary>
     public bool IsSolo => ReParty.Count == 1;
@@ -106,6 +103,11 @@ public class RoundDescription
     /// The announcement of the Contra party.
     /// </summary>
     public Announcement ContraAnnouncement { get; set; } = Announcement.None;
+
+    /// <summary>
+    /// The number of the last trick in which the Contra party can make an announcement.
+    /// </summary>
+    public int LastContraAnnouncementNumber { get; set; } = 3;
 
     /// <summary>
     /// The additional points of the Contra party.
@@ -269,6 +271,27 @@ public class Round
     public delegate void RegistrationsAppliedEventHandler(object sender, RegistrationsAppliedEventArgs e);
     public event RegistrationsAppliedEventHandler? RegistrationsApplied;
 
+    public class AnnouncementMadeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The player who made the announcement.
+        /// </summary>
+        public Player Player { get; init; }
+
+        /// <summary>
+        /// The announcement that has been made.
+        /// </summary>
+        public Announcement Announcement { get; init; }
+
+        public AnnouncementMadeEventArgs(Player player, Announcement announcement)
+        {
+            Player = player;
+            Announcement = announcement;
+        }
+    }
+    public delegate void AnnouncementMadeEventHandler(object sender, AnnouncementMadeEventArgs e);
+    public event AnnouncementMadeEventHandler? AnnouncementMade;
+
     public class TrickCreatedEventArgs : EventArgs
     {
         /// <summary>
@@ -406,6 +429,83 @@ public class Round
 
     #endregion
 
+    /// <summary>
+    /// Validates whether the given player can make the given announcement.
+    /// </summary>
+    internal bool ValidateAnnouncement(Player player, Announcement announcement)
+    {
+        if (!player.CanMakeAnnouncement)
+        {
+            Log.Debug("Invalid announcement. Player {player} isn't allowed to make an announcement.", player.Name);
+            return false;
+        }
+
+        if (player.IsReParty)
+        {
+            if (announcement == Announcement.Contra)
+            {
+                Log.Debug("Invalid announcement. Player {player} is part of the Re party and can't make a Contra announcement.", player.Name);
+                return false;
+            }
+            if (announcement <= Description.ReAnnouncement)
+            {
+                Log.Debug("Invalid announcement. The current announcement of player {player}s party is already equal or higher.", player.Name);
+                return false;
+            }
+        }
+        else
+        {
+            if (announcement == Announcement.Re)
+            {
+                Log.Debug("Invalid announcement. Player {player} is part of the Contra party and can't make a Re announcement.", player.Name);
+                return false;
+            }
+            if (announcement <= Description.ContraAnnouncement)
+            {
+                Log.Debug("Invalid announcement. The current announcement of player {player}s party is already equal or higher.", player.Name);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Lets a player make an announcement.
+    /// If other announcements are between the current and the announcement to be made,
+    /// to announcements in between are made first.
+    /// Does nothing if the announcement is none or invalid.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="announcement"></param>
+    internal void MakeAnnouncement(Player player, Announcement announcement)
+    {
+        Announcement oldAnnouncement = player.IsReParty ? Description.ReAnnouncement : Description.ContraAnnouncement;
+        for (var next = oldAnnouncement + 1; next <= announcement; next++)
+        {
+            // Skip Re entry if player is Contra party and next announcement should be Contra
+            if (next == Announcement.Re && !player.IsReParty) next++;
+            // Skip Contra entry if player is Re party and next announcement should be Under90
+            if (next == Announcement.Under90 && player.IsReParty) next++;
+
+            // Set next announcement and increment number of lastest announcement trick
+            if (player.IsReParty)
+            {
+                Description.ReAnnouncement = next;
+                Description.LastReAnnouncementNumber++;
+            }
+            else
+            {
+                Description.ContraAnnouncement = next;
+                Description.LastContraAnnouncementNumber++;
+            }
+
+            Log.Information("Player {player} made the announcement {ann}.", player.Name, next);
+            // Invoke AnnouncementMade event
+            AnnouncementMade?.Invoke(this, new(player, next));
+        }
+    }
+
     #region Private & Protected Methods
 
     /// <summary>
@@ -510,78 +610,111 @@ public class Round
         Log.Information("Re party has {value} value.", reValue);
         Log.Information("Contra party has {value} value.", contraValue);
 
-        List<string> reAnnouncements = new();
-        List<string> contraAnnouncements = new();
+        List<string> rePoints = new();
+        List<string> contraPoints = new();
 
-        List<string> reValuePoints = new();
-        List<string> contraValuePoints = new();
-
-        // Determine points from announcements
-        var possibleValuePoints = new[] { "Unter 90", "Unter 60", "Unter 30", "Schwarz" };
+        // Determine value points
         bool reMissedAnnouncement = false;
         bool contraMissedAnnouncement = false;
-        for (int i = 0; i < possibleValuePoints.Length; i++)
+        for (Announcement announcement = Announcement.Under90; announcement <= Announcement.Black; announcement++)
         {
-            // Check Re value points
-            if (contraValue < (i + 1) * 30) reValuePoints.Add(possibleValuePoints[i]);
-            // Check Contra value points
-            if (reValue < (i + 1) * 30) contraValuePoints.Add(possibleValuePoints[i]);
+            var value = (announcement != Announcement.Black) ? (6 - (int)announcement) * 30 : 1;
+            var valuePoint = announcement.GetName()!;
 
-            var announcement = $"{possibleValuePoints[i]} Angesagt";
-            // Check Re announcements
-            if (reAnnouncements.Contains(announcement))
+            // Check Re value point
+            if (contraValue < value) rePoints.Add(valuePoint);
+            // Check Contra value point
+            if (reValue < value) contraPoints.Add(valuePoint);
+
+            // Check Re announcement
+            if (Description.ReAnnouncement >= announcement)
             {
-                if (contraValue < (i + 1) * 30) reValuePoints.Add(announcement);
+                if (contraValue < value) rePoints.Add($"{valuePoint} Angesagt");
                 else
                 {
-                    contraValuePoints.Add($"{announcement} Abgesagt");
+                    contraPoints.Add($"{valuePoint} Abgesagt");
                     reMissedAnnouncement = true;
                 }
             }
-            // Check Contra announcements
-            if (contraAnnouncements.Contains(announcement))
+            // Check Contra announcement
+            if (Description.ContraAnnouncement >= announcement)
             {
-                if (reValue < (i + 1) * 30) contraValuePoints.Add(announcement);
+                if (reValue < value) contraPoints.Add($"{valuePoint} Angesagt");
                 else
                 {
-                    reValuePoints.Add($"{announcement} Abgesagt");
+                    rePoints.Add($"{valuePoint} Abgesagt");
                     contraMissedAnnouncement = true;
                 }
             }
         }
 
+        // Find out which party won
         bool reWins = false;
         if (reMissedAnnouncement && contraMissedAnnouncement)
         {
-            reValuePoints.Clear();
-            contraValuePoints.Clear();
+            rePoints.Clear();
+            contraPoints.Clear();
         }
         else if (reMissedAnnouncement)
         {
-            contraValuePoints.Add("Gegen die Alten");
-            reValuePoints.Clear();
+            contraPoints.Add("Gewonnen");
+            contraPoints.Add("Gegen die Alten");
+            rePoints.Clear();
         }
         else if (contraMissedAnnouncement)
         {
-            contraValuePoints.Clear();
+            rePoints.Add("Gewonnen");
+            contraPoints.Clear();
             reWins = true;
         }
         else if (reValue > 120)
         {
-            contraValuePoints.Clear();
+            rePoints.Add("Gewonnen");
+            contraPoints.Clear();
             reWins = true;
         }
         else
         {
-            contraValuePoints.Add("Gegen die Alten");
-            reValuePoints.Clear();
+            contraPoints.Add("Gewonnen");
+            contraPoints.Add("Gegen die Alten");
+            rePoints.Clear();
         }
 
-        var valuePoints = reWins ? reValuePoints : contraValuePoints;
-        int additionalPoints = (reWins ? 1 : -1) * (Description.ReAdditionalPoints.Count - Description.ContraAdditionalPoints.Count);
-        int basePoints = valuePoints.Count + additionalPoints;
+        // Check Re announcement
+        if (Description.ReAnnouncement >= Announcement.Re)
+        {
+            if (reWins)
+            {
+                rePoints.Add("Re");
+                rePoints.Add("Re");
+            }
+            else
+            {
+                contraPoints.Add("Re Abgesagt");
+                contraPoints.Add("Re Abgesagt");
+            }
+        }
+        // Check Contra announcement
+        if (Description.ContraAnnouncement >= Announcement.Contra)
+        {
+            if (!reWins)
+            {
+                contraPoints.Add("Contra");
+                contraPoints.Add("Contra");
+            }
+            else
+            {
+                rePoints.Add("Contra Abgesagt");
+                rePoints.Add("Contra Abgesagt");
+            }
+        }
 
-        Result = new(reValue > contraValue, reValue, contraValue, basePoints, Description.IsSolo);
+        // Add additional points
+        rePoints.AddRange(Description.ReAdditionalPoints);
+        contraPoints.AddRange(Description.ContraAdditionalPoints);
+
+        int basePoints = (reWins ? 1 : -1) * (rePoints.Count - contraPoints.Count);
+        Result = new(reValue > contraValue, reValue, rePoints, contraValue, contraPoints, basePoints);
 
         Log.Information("Finished determining results.");
     }

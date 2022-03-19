@@ -89,21 +89,19 @@ public class RoundFinishedMessage : Message
 
     public override string Subject => SUBJECT;
 
-    public bool? RePartyWon { get; set; }
+    public bool RePartyWon { get; set; }
 
     public IList<string>? ReParty { get; set; }
 
-    public IList<string>? ReAdditionalPoints { get; set; }
+    public int ReValue { get; set; }
 
-    public int? ReValue { get; set; }
+    public IList<string>? RePoints { get; set; }
 
     public IList<string>? ContraParty { get; set; }
 
-    public IList<string>? ContraAdditionalPoints { get; set; }
+    public int ContraValue { get; set; }
 
-    public int? ContraValue { get; set; }
-
-    public bool? IsSolo { get; init; }
+    public IList<string>? ContraPoints { get; set; }
 
     public int BasePoints { get; init; }
 }
@@ -128,6 +126,17 @@ public class CardPlacedMessage : Message
     public string? Player { get; set; }
 
     public string? PlacedCard { get; set; }
+}
+
+public class AnnouncementMadeMessage : Message
+{
+    public const string SUBJECT = "UPDATE_AnnouncementMade";
+
+    public override string Subject => SUBJECT;
+
+    public string? Player { get; set; }
+
+    public Announcement Announcement { get; set; }
 }
 
 public class TrickFinishedMessage : Message

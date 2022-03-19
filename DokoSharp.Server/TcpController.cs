@@ -58,18 +58,19 @@ public class TcpController : IPlayerController, IDisposable
         });
     }
 
-    public Card RequestPlaceCard(Player player, Trick trick)
+    public Tuple<Card, Announcement> RequestPlaceCard(Player player, Trick trick, bool canMakeAnnouncement)
     {
         // Send request
         SendMessage(new RequestPlaceCardMessage()
         {
             TrickCards = trick.PlacedCards.Select(c => c.Base.Identifier).ToArray(),
+            CanMakeAnnouncement = canMakeAnnouncement
         });
 
         // Wait for reply
-        var reply = ReceiveMessage<ReplyCardsMessage>();
+        var reply = ReceiveMessage<ReplyPlaceCardMessage>();
 
-        return player.Cards.First(c => c.Base.Identifier == reply.CardIdentifiers![0]);
+        return new(player.Cards.First(c => c.Base.Identifier == reply.CardIdentifiers![0]), reply.Announcement);
     }
 
     public IEnumerable<Card> RequestCards(Player player, int amount, string requestText)
@@ -150,7 +151,7 @@ public class TcpController : IPlayerController, IDisposable
         _writer.WriteLine(msgJson);
         _writer.Flush();
 
-        Log.Debug("Sent message to player {player}:\n{msg}", _client.Client.RemoteEndPoint, JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
+        Log.Verbose("Sent message to player {ip}:\n{msg}", _client.Client.RemoteEndPoint, JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
     }
 
     /// <summary>
@@ -166,7 +167,11 @@ public class TcpController : IPlayerController, IDisposable
             if (msgJson == null) throw new EndOfStreamException();
 
             Message? msg = JsonSerializer.Deserialize<Message>(msgJson, Utils.DefaultJsonOptions);
-            if (msg != null && msg is T t) return t;
+            if (msg != null && msg is T typedMsg)
+            {
+                Log.Verbose("Received message from player {ip}:\n{msg}", _client.Client.RemoteEndPoint, JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
+                return typedMsg;
+            }
             else
             {
                 Log.Error("Encountered invalid message. Expected message of type {type}.", typeof(T).Name);

@@ -21,6 +21,8 @@ public interface IWindowDialogService
     bool ShowChoiceDialog<T>(string title, IEnumerable<T> choices, out T result);
 
     bool ShowYesNoDialog(string title, out bool result);
+
+    void ShowInfoDialog(string title, string text);
 }
 
 public interface IDialogControl
@@ -38,5 +40,10 @@ public interface IChoiceControl : IDialogControl
 public interface IYesNoControl : IDialogControl
 {
     public bool IsYes { get; }
+}
+
+public interface IInfoControl : IDialogControl
+{
+    public string Text { set; }
 }
 

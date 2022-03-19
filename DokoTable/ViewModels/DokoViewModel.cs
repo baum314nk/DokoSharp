@@ -24,6 +24,16 @@ using System.Net.Sockets;
 
 namespace DokoTable.ViewModels;
 
+public record AnnouncementDto(Announcement Announcement, string Name)
+{
+    public static readonly IReadOnlyList<AnnouncementDto> Available;
+
+    static AnnouncementDto()
+    {
+        Available = Enum.GetValues<Announcement>().Select(a => new AnnouncementDto(a, a.GetName() ?? string.Empty)).ToList();
+    }
+}
+
 public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
 {
     #region Fields
@@ -41,11 +51,15 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
     private string _infoText = "";
     private int _numberOfRounds = 4;
     private int _currentRoundNumber = 0;
-    private int _currentTrickNumber = 4;
+    private int _currentTrickNumber = 0;
+    private bool _canMakeAnnouncement = false;
+    private List<AnnouncementDto> _availableAnnouncements;
+    private Announcement _currentAnnouncement;
     private bool disposedValue;
 
     // Reply values
     private CardBase? _selectedHandCard;
+    private Announcement _selectedAnnouncement;
 
     #endregion
 
@@ -237,25 +251,67 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         get => _selectedHandCard;
         set
         {
-            //// Skip if value contains same elements
-            //if (SelectedHandCard.Intersect(value).Count() == SelectedHandCard.Count) return;
-
             _selectedHandCard = value;
             RaisePropertyChanged(nameof(SelectedHandCard));
 
             // Set in reply values of client if it exists
             if (_client == null) return;
-            //if (SelectedHandCard.Count == 1)
-            //{
             _client.ReplyValues["PlaceCard"] = SelectedHandCard;
-            //    _client.ReplyValues["Cards"] = null;
-            //}
-            //else
-            //{
-            //_client.ReplyValues["PlaceCard"] = null;
-            //_client.ReplyValues["Cards"] = SelectedHandCard;
-            //}
+            _client.ReplyValues["Announcement"] = SelectedAnnouncement;
             _client.ReplyValuesUpdated.Set();
+        }
+    }
+
+    /// <summary>
+    /// The available announcements.
+    /// </summary>
+    public IEnumerable<AnnouncementDto> AvailableAnnouncements
+    {
+        get => _availableAnnouncements;
+        set {
+            _availableAnnouncements = new(value);
+            RaisePropertyChanged(nameof(AvailableAnnouncements));
+        }
+    }
+
+    /// <summary>
+    /// A flag wether an announcement can be made.
+    /// </summary>
+    public bool CanMakeAnnouncement
+    {
+        get => _canMakeAnnouncement;
+        set
+        {
+            _canMakeAnnouncement = value;
+            RaisePropertyChanged(nameof(CanMakeAnnouncement));
+        }
+    }
+
+    /// <summary>
+    /// The currently selected announcement.
+    /// </summary>
+    public Announcement SelectedAnnouncement
+    {
+        get => _selectedAnnouncement;
+        set
+        {
+            _selectedAnnouncement = value;
+            RaisePropertyChanged(nameof(SelectedAnnouncement));
+        }
+    }
+
+    /// <summary>
+    /// The current announcement of the player.
+    /// </summary>
+    public Announcement CurrentAnnouncement
+    {
+        get => _currentAnnouncement;
+        set
+        {
+            _currentAnnouncement = value;
+            RaisePropertyChanged(nameof(CurrentAnnouncement));
+
+            AvailableAnnouncements = GetAvailableAnnouncements();
         }
     }
 
@@ -337,6 +393,7 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         _handCards = new();
         _placedCards = new();
         _placeableCards = new();
+        _availableAnnouncements = new();
 
         LoadDefaultImageSetCommand = new AsyncCommand(DoLoadDefaultImageSet);
         LoadImageSetCommand = new RelayCommand<string>(
@@ -362,8 +419,10 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
             case RequestYesNoMessage msg:
                 Client_RequestYesNo(msg);
                 break;
-            case RequestPlaceCardMessage:
+            case RequestPlaceCardMessage msg:
                 Log.Information("Waiting until a valid card is selected.");
+                SelectedHandCard = null;
+                CanMakeAnnouncement = msg.CanMakeAnnouncement;
                 break;
             case RequestCardsMessage msg:
                 Log.Information("Waiting until a set of {amount} cards is selected.", msg.Amount);
@@ -381,9 +440,11 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
                 break;
             case RoundCreatedMessage msg:
                 Log.Information("Round {rn} was created. Player order is {order}.", msg.RoundNumber, msg.PlayerOrder);
+                CurrentRoundNumber = msg.RoundNumber;
                 break;
             case RoundStartedMessage msg:
                 Log.Information("Round has started. Trump ranking is {tr}.", msg.TrumpRanking);
+                CurrentAnnouncement = Announcement.None;
                 break;
             case CardsReceivedMessage msg:
                 Client_ReceivedCards(msg);
@@ -396,24 +457,22 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
                 break;
             case TrickCreatedMessage msg:
                 Log.Information("Trick {tn} was created. Player order is {order}.", msg.TrickNumber, msg.PlayerOrder);
+                CurrentTrickNumber = msg.TrickNumber;
+                break;
+            case AnnouncementMadeMessage msg:
+                Log.Information("Player {player} made the announcement {announcement}.", msg.Player, msg.Announcement.GetName());
+                if (msg.Player == PlayerName) CurrentAnnouncement = msg.Announcement;
                 break;
             case CardPlacedMessage msg:
                 Client_CardPlaced(msg);
                 break;
             case TrickFinishedMessage msg:
+                Log.Information("Trick has finished. Winner of {value} value is {winner}.", msg.Value, msg.Winner);
                 PlacedCards = new List<CardBase>();
                 PlaceableHandCards = new List<CardBase>();
-                Log.Information("Trick has finished. Winner of {value} value is {winner}.", msg.Value, msg.Winner);
                 break;
             case RoundFinishedMessage msg:
-                HandCards = new List<CardBase>();
-                TrumpCards = new List<CardBase>();
-                Log.Information("Round has finished. Winner of {points} is {winner}. Re party are {reParty} with {reValue} total value and additional points {rePoints}. Contra party are {contraParty} with {contraValue} total value and additional points {contraPoints}.",
-                    msg.BasePoints,
-                    ((bool)msg.RePartyWon!) ? "Re party" : "Contra party",
-                    msg.ReParty, msg.ReValue, msg.ReAdditionalPoints,
-                    msg.ContraParty, msg.ContraValue, msg.ContraAdditionalPoints
-                );
+                Client_RoundFinished(msg);
                 break;
             case PointsUpdatedMessage msg:
                 Log.Information("Player points where updated: {updates}", msg.PointChanges);
@@ -462,10 +521,13 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         {
             PlaceableHandCards = GetPlaceableHandCards();
         }
-        // De-select card & remove it from hand if self placed it
+        // De-select card & announcement and remove card from hand if self placed it
         if (msg.Player == PlayerName)
         {
             SelectedHandCard = null;
+            SelectedAnnouncement = Announcement.None;
+            CanMakeAnnouncement = false;
+            AvailableAnnouncements = Enumerable.Empty<AnnouncementDto>();
             RemoveHandCard(card);
         }
     }
@@ -507,6 +569,37 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
         else Log.Information("Selected reservation {reservation}.", reservation);
     }
 
+    private void Client_RoundFinished(RoundFinishedMessage msg)
+    {
+        Log.Information("Round has finished. Winner of {points} is {winner}. Re party are {reParty} with {reValue} total value and points {rePoints}. Contra party are {contraParty} with {contraValue} total value and points {contraPoints}.",
+            msg.BasePoints,
+            ((bool)msg.RePartyWon!) ? "Re party" : "Contra party",
+            msg.ReParty, msg.ReValue, msg.RePoints,
+            msg.ContraParty, msg.ContraValue, msg.ContraPoints
+        );
+
+        // Cleanup
+        HandCards = new List<CardBase>();
+        TrumpCards = new List<CardBase>();
+        CurrentAnnouncement = Announcement.None;
+
+        // Show dialog with result info
+        DialogService!.ShowInfoDialog($"Results of round {CurrentRoundNumber}",
+$@"Winner: {(msg.RePartyWon ? "Re" : "Contra")} party
+Base points: {msg.BasePoints}
+Re party:
+  Members: {string.Join(", ", msg.ReParty!)}
+  Value: {msg.ReValue}
+  Points: 
+{string.Join("    \n", msg.RePoints!)}
+Contra party:
+  Members: {string.Join(", ", msg.ContraParty!)}
+  Value: {msg.ContraValue}
+  Points:
+{string.Join("    \n", msg.ContraPoints!)}
+");
+    }
+
     #endregion
 
     private IEnumerable<CardBase> GetPlaceableHandCards()
@@ -534,6 +627,11 @@ public class DokoViewModel : IViewModel, INotifyPropertyChanged, IDisposable
             // ... except when player has none
             else return HandCards;
         }
+    }
+
+    private IEnumerable<AnnouncementDto> GetAvailableAnnouncements()
+    {
+        return AnnouncementDto.Available.Where(dto => dto.Announcement > CurrentAnnouncement || dto.Announcement == Announcement.None);
     }
 
     private void SortHandCards()

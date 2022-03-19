@@ -79,6 +79,7 @@ public class DokoClient : IDisposable
         ReplyValues = new(2, new []
         {
             new KeyValuePair<string, object?>("PlaceCard", null),
+            new KeyValuePair<string, object?>("Announcement", Announcement.None),
             new KeyValuePair<string, object?>("Cards", null),
             new KeyValuePair<string, object?>("Color", null),
             new KeyValuePair<string, object?>("YesNo", null),
@@ -203,19 +204,23 @@ public class DokoClient : IDisposable
 
     private void HandleRequestPlaceCard()
     {
-
         CardBase? placedCard = ReplyValues["PlaceCard"] as CardBase;
+        Announcement announcement = (Announcement)ReplyValues["Announcement"]!;
         // If value is unset, we wait until it gets set
         while (placedCard == null)
         {
             ReplyValuesUpdated.WaitOne();
             placedCard = ReplyValues["PlaceCard"] as CardBase;
+            announcement = (Announcement)ReplyValues["Announcement"]!;
         }
-        ReplyValues["PlaceCard"] = null;
 
-        SendMessage(new ReplyCardsMessage()
+        ReplyValues["PlaceCard"] = null;
+        ReplyValues["Announcement"] = Announcement.None;
+
+        SendMessage(new ReplyPlaceCardMessage()
         {
-            CardIdentifiers = new[] { placedCard.Identifier }
+            CardIdentifiers = new[] { placedCard.Identifier },
+            Announcement = announcement,
         });
     }
 

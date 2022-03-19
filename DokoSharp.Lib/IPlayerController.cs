@@ -15,21 +15,22 @@ public interface IPlayerController
     /// Signals the controller that the player received cards.
     /// </summary>
     /// <param name="player"></param>
-    /// <param name="cards"></param>
+    /// <param name="receivedCards"></param>
     void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards, bool clearedOldCards);
 
     /// <summary>
     /// Signals the controller that the player dropped cards.
     /// </summary>
     /// <param name="player"></param>
-    /// <param name="cards"></param>
+    /// <param name="droppedCards"></param>
     void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards);
 
     /// <summary>
     /// Requests a card from the controller to place into a trick.
+    /// A flag signals whether the player can also make an announcement.
     /// </summary>
     /// <returns></returns>
-    Card RequestPlaceCard(Player player, Trick trick);
+    Tuple<Card, Announcement> RequestPlaceCard(Player player, Trick trick, bool canMakeAnnouncement);
 
     /// <summary>
     /// Requests cards from the controller.

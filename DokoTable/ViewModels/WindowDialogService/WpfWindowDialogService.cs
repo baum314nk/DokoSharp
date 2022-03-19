@@ -16,6 +16,7 @@ public class WpfWindowDialogService : IWindowDialogService
 {
     public Type? ChoiceControlType { get; set; }
     public Type? YesNoControlType { get; set; }
+    public Type? InfoControlType { get; set; }
 
     public bool ShowChoiceDialog<T>(string title, IEnumerable<T> choices, out T result)
     {
@@ -42,6 +43,16 @@ public class WpfWindowDialogService : IWindowDialogService
 
         result = yesNoControl.IsYes;
         return dialogResult;
+    }
+
+    public void ShowInfoDialog(string title, string text)
+    {
+        if (InfoControlType == null) throw new Exception("Can't show an info dialog because no infono control is specified.");
+
+        var infoControl = (IInfoControl)Activator.CreateInstance(InfoControlType)!;
+        infoControl.Text = text;
+
+        ShowDialog(title, infoControl);
     }
 
     public bool ShowDialog(string title, object content)

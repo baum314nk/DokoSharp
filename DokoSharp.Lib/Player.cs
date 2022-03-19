@@ -38,6 +38,33 @@ public class Player : IIdentifiable
 
     public string Identifier => Name;
 
+    /// <summary>
+    /// True if player is part of the Re party in the current round.
+    /// Is always false if no current round exists.
+    /// </summary>
+    public bool IsReParty => Game.CurrentRound?.Description.ReParty.Contains(this) ?? false;
+
+    /// <summary>
+    /// True if player can make a valid announcement in the current round.
+    /// Is always false if no current round exists.
+    /// </summary>
+    public bool CanMakeAnnouncement
+    {
+        get
+        {
+            var round = Game.CurrentRound;
+            if (round == null) return false;
+
+            // Can't make announcements after latest allowed trick
+            var lastAnnouncementNumber = IsReParty ? round.Description.LastReAnnouncementNumber : round.Description.LastContraAnnouncementNumber;
+            if (lastAnnouncementNumber < round.CurrentTrickNumber) return false;
+
+            // Can only make an announcement if the highest announcement has already been made 
+            var currentAnnouncement = IsReParty ? round.Description.ReAnnouncement : round.Description.ContraAnnouncement;
+            return currentAnnouncement < Announcement.Black;
+        }
+    }
+
     #endregion
 
     /// <summary>
@@ -110,15 +137,27 @@ public class Player : IIdentifiable
     {
         if (Cards is null) throw new Exception("Player can't place a card because his hand is empty.");
 
-        Card? selectedCard = null;
-        while (selectedCard is null)
+        Card? selectedCard;
+        Announcement announcement;
+        var canMakeAnnouncement = CanMakeAnnouncement;
+        while (true)
         {
-            Card card = _controller.RequestPlaceCard(this, trick);
+            var result = _controller.RequestPlaceCard(this, trick, canMakeAnnouncement);
 
-            if (trick.ValidatePlacing(this, card))
-            {
-                selectedCard = card;
-            }
+            // Validate placing
+            if (!trick.ValidatePlacing(this, result.Item1)) continue;
+            // Validate annonucement
+            if (canMakeAnnouncement && result.Item2 != Announcement.None && !trick.Round.ValidateAnnouncement(this, result.Item2)) continue;
+
+            selectedCard = result.Item1;
+            announcement = result.Item2;
+            break;
+        }
+
+        // Make announcement
+        if (canMakeAnnouncement && announcement != Announcement.None)
+        {
+            trick.Round.MakeAnnouncement(this, announcement);
         }
 
         // Remove card from hand and return it

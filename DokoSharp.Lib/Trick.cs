@@ -164,7 +164,7 @@ public class Trick
     {
         // First card can be anything
         if (PlacedCards.Count == 0) return true;
-        
+
         var firstCard = PlacedCards[0];
 
         // Trump has to be placed
@@ -181,12 +181,14 @@ public class Trick
             {
                 Log.Debug("Valid placing. Player {player} doesn't have a trump card to place on {firstCard}.", player.Name, firstCard);
                 return true;
-            } else
+            }
+            else
             {
                 Log.Debug("Invalid placing. Player {player} has a trump card to place on on {firstCard}.", player.Name, firstCard);
                 return false;
             }
-        } else // Color of the first card has to be placed
+        }
+        else // Color of the first card has to be placed
         {
             if (card.Base.Color == firstCard.Base.Color && !card.IsTrump)
             {

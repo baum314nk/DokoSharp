@@ -17,7 +17,24 @@ public class RequestPlaceCardMessage : Message
     public override string Subject => SUBJECT;
 
     public IList<string>? TrickCards { get; set; }
+
+    public bool CanMakeAnnouncement { get; set; }
 }
+/// <summary>
+/// A reply message that contains the indentifiers of the selected card of the player
+/// and optionally an announcement.
+/// </summary>
+public class ReplyPlaceCardMessage : Message
+{
+    public const string SUBJECT = "REPLY_PlaceCard";
+
+    public override string Subject => SUBJECT;
+
+    public IList<string>? CardIdentifiers { get; set; }
+
+    public Announcement Announcement { get; set; }
+}
+
 /// <summary>
 /// A request message that expects the player to select one or more cards.
 /// </summary>

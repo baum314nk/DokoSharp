@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ReleaseDir>$(SolutionDir)releases\$(MSBuildProjectName)\</ReleaseDir>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <AssemblyVersion>0.1.0.1</AssemblyVersion>
   </PropertyGroup>
 
   <Target Name="CopyRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' ">
@@ -18,14 +18,13 @@
   </Target>
 
   <Target Name="Zip" AfterTargets="CopyRelease" Condition="'$(Configuration)' == 'Release' ">
-    <ZipDirectory
-      SourceDirectory="$(ReleaseDir)"
-      DestinationFile="$(ReleaseDir)..\$(ProjectName)_$(AssemblyVersion).zip"
-      Overwrite="true"/>
+    <ZipDirectory SourceDirectory="$(ReleaseDir)" DestinationFile="$(ReleaseDir)..\$(ProjectName)_$(AssemblyVersion).zip" Overwrite="true" />
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

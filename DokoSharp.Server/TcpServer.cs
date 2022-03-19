@@ -153,6 +153,7 @@ public class TcpServer : IDisposable
         round.ReservationsPerformed += Round_ReservationsPerformed;
         round.RegistrationsApplied += Round_RegistrationsApplied;
         round.TrickCreated += Round_TrickCreated;
+        round.AnnouncementMade += Round_AnnouncementMade;
         round.RoundFinished += Round_RoundFinished;
     }
 
@@ -217,6 +218,15 @@ public class TcpServer : IDisposable
         trick.TrickFinished += Trick_TrickFinished;
     }
 
+    private void Round_AnnouncementMade(object sender, Round.AnnouncementMadeEventArgs e)
+    {
+        SendMessageToAll(new AnnouncementMadeMessage()
+        {
+            Player = e.Player.Identifier,
+            Announcement = e.Announcement
+        });
+    }
+
     private void Round_RoundFinished(object sender, Round.RoundFinishedEventArgs e)
     {
         var round = (Round)sender;
@@ -224,12 +234,11 @@ public class TcpServer : IDisposable
         {
             RePartyWon = e.Result.RePartyWon,
             ReParty = round.Description.ReParty.ToIdentifiers().ToArray(),
-            ReAdditionalPoints = round.Description.ReAdditionalPoints,
+            RePoints = e.Result.RePoints,
             ReValue = e.Result.ReValue,
             ContraParty = round.Description.ContraParty.ToIdentifiers().ToArray(),
-            ContraAdditionalPoints = round.Description.ContraAdditionalPoints,
+            ContraPoints = e.Result.ContraPoints,
             ContraValue = e.Result.ContraValue,
-            IsSolo = e.Result.IsSolo,
             BasePoints = e.Result.BasePoints
         });
 
@@ -238,6 +247,7 @@ public class TcpServer : IDisposable
         round.ReservationsPerformed -= Round_ReservationsPerformed;
         round.RegistrationsApplied -= Round_RegistrationsApplied;
         round.TrickCreated -= Round_TrickCreated;
+        round.AnnouncementMade -= Round_AnnouncementMade;
         round.RoundFinished -= Round_RoundFinished;
     }
 

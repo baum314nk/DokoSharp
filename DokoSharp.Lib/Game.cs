@@ -263,13 +263,14 @@ public class Game
 
         var reParty = CurrentRound!.Description.ReParty;
         var contraParty = CurrentRound.Description.ContraParty;
+        var isSolo = CurrentRound.Description.IsSolo;
 
         var winners = result.RePartyWon ? reParty : contraParty;
         var loosers = result.RePartyWon ? contraParty : reParty;
 
         // Determine point changes based on results of round
         Log.Debug("Write results of round to points table.");
-        if (result.IsSolo)
+        if (isSolo)
         {
             if (result.RePartyWon)
             {

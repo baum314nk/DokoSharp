@@ -16,8 +16,9 @@
         Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <wds:WpfWindowDialogService x:Key="dialogService"
-                                         ChoiceControlType="{x:Type dialogs:ChoiceControl}"
-                                         YesNoControlType="{x:Type dialogs:YesNoControl}"/>
+                                    ChoiceControlType="{x:Type dialogs:ChoiceControl}"
+                                    YesNoControlType="{x:Type dialogs:YesNoControl}"
+                                    InfoControlType="{x:Type dialogs:InfoControl}"/>
         <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
     </Window.Resources>
     <Window.Background>
@@ -85,18 +86,26 @@
                 HorizontalAlignment="Right" VerticalAlignment="Top" 
                 Width="80" Height="25" Margin="0,8,10,0"/>
 
+            <Label Content="Announcement: " 
+                   Grid.Row="1"
+                   HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{Binding AvailableAnnouncements}" DisplayMemberPath="Name" IsEnabled="{Binding CanMakeAnnouncement}"
+                      SelectedValuePath="Announcement" SelectedValue="{Binding SelectedAnnouncement, Mode=TwoWay}"
+                      Grid.Row="1"
+                      VerticalAlignment="Center" HorizontalAlignment="Left" Margin="102,0,0,0" Width="150" />
+
             <Button Content="Connect" Command="{Binding ConnectCommand}"
                 Grid.Row="4" 
-                HorizontalAlignment="Left" VerticalAlignment="Bottom" 
-                Width="80" Height="25" Margin="10,0,0,10"/>
+                HorizontalAlignment="Left" VerticalAlignment="Center" 
+                Width="80" Height="25" Margin="10,0,0,0"/>
             <Label Content="Hostname:" 
-               Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,199,10" HorizontalAlignment="Right"/>
+               Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,199,0" HorizontalAlignment="Right"/>
             <TextBox Text="{Binding ServerHostname}" VerticalContentAlignment="Center"
-                Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,114,10" HorizontalAlignment="Right" Width="80"/>
+                Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,114,0" HorizontalAlignment="Right" Width="80"/>
             <Label Content="Port:" 
-               Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,75,10" HorizontalAlignment="Right"/>
+               Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,75,0" HorizontalAlignment="Right"/>
             <TextBox Text="{Binding ServerPort}" VerticalContentAlignment="Center"
-                Grid.Row="4" VerticalAlignment="Bottom" Height="25" Margin="0,0,10,10" HorizontalAlignment="Right" Width="60"/>
+                Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,10,0" HorizontalAlignment="Right" Width="60"/>
 
         </Grid>
         <!--<wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
