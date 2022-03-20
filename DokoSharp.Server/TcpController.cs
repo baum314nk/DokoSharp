@@ -1,5 +1,5 @@
 ﻿using DokoSharp.Lib;
-using DokoSharp.Lib.Messaging;
+using DokoSharp.Server.Messaging;
 using Serilog;
 using System;
 using System.Collections.Generic;

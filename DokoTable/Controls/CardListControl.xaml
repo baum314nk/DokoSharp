@@ -11,14 +11,20 @@
         <local:ImageOfCardConverter x:Key="imageOfCardConv"/>
     </UserControl.Resources>
     <Grid>
-        <ListView ItemsSource="{Binding Cards, ElementName=ThisControl}"
-                  Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled">
-            <ListView.ItemsPanel>
+        <ItemsControl ItemsSource="{Binding Cards, ElementName=ThisControl}">
+            <ItemsControl.Template>
+                <ControlTemplate TargetType="ItemsControl">
+                    <Border Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ItemsPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal" />
                 </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
-            <ListView.ItemTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Image Stretch="Fill">
                         <Image.Source>
@@ -29,7 +35,7 @@
                         </Image.Source>
                     </Image>
                 </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </UserControl>

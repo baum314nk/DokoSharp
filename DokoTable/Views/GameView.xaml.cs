@@ -45,13 +45,5 @@ public partial class GameView : UserControl
         InitializeComponent();
     }
 
-    private void UserControl_Loaded(object sender, RoutedEventArgs e)
-    {
-        // Setup logging
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Debug(Serilog.Events.LogEventLevel.Debug)
-            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Debug)
-            .CreateLogger();
-    }
 }
 

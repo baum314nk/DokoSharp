@@ -11,6 +11,9 @@ using System.Windows.Media.Imaging;
 using Serilog;
 using System.Windows.Threading;
 using DokoTable.Models;
+using System.Windows.Input;
+using DokoTable.ViewModels.Commands;
+using DokoTable.Views;
 
 namespace DokoTable.ViewModels;
 
@@ -21,6 +24,7 @@ public class MainViewModel : BaseViewModel, IDisposable
 {
     #region Fields
 
+    private GameViewModel? _gameViewModel = null;
     private IReadOnlyDictionary<CardBase, BitmapImage>? _cardImageSet = null;
     private DokoTcpClient? _client = null;
     private string? _accountName = null;
@@ -42,7 +46,7 @@ public class MainViewModel : BaseViewModel, IDisposable
     public DokoTcpClient? Client
     {
         get => _client;
-        set
+        internal set
         {
             _client = value;
             RaisePropertyChanged(nameof(Client));
@@ -56,7 +60,7 @@ public class MainViewModel : BaseViewModel, IDisposable
     public string? AccountName
     {
         get => _accountName;
-        set
+        internal set
         {
             _accountName = value;
             RaisePropertyChanged(nameof(AccountName));
@@ -69,7 +73,7 @@ public class MainViewModel : BaseViewModel, IDisposable
     public IReadOnlyDictionary<CardBase, BitmapImage>? CardImageSet
     {
         get => _cardImageSet;
-        set
+        internal set
         {
             _cardImageSet = value;
             RaisePropertyChanged(nameof(CardImageSet));
@@ -78,13 +82,37 @@ public class MainViewModel : BaseViewModel, IDisposable
 
     #region Sub-ViewModels
 
-    public ImageViewModel ImageViewModel { get; private set; }
+    public ImageSettingsViewModel ImageSettingsViewModel { get; private set; }
 
     public ConnectionViewModel ConnectionViewModel { get; private set; }
 
-    public GameViewModel? GameViewModel { get; private set; }
+    public GameViewModel? GameViewModel
+    {
+        get => _gameViewModel;
+        private set
+        {
+            _gameViewModel = value;
+            RaisePropertyChanged(nameof(GameViewModel));
+        }
+    }
 
     #endregion
+
+    #endregion
+
+    #region Commands
+
+    public ICommand ShowConnectionDialogCommand { get; init; }
+    private void DoShowConnectionView()
+    {
+        DialogService!.ShowDialog("Connection", new ConnectionView() { DataContext = ConnectionViewModel }, false);
+    }
+
+    public ICommand ShowImageDialogCommand { get; init; }
+    private void DoShowImageDialogCommand()
+    {
+        DialogService!.ShowDialog("Image Settings", new ImageSettingsView() { DataContext = ImageSettingsViewModel }, false);
+    }
 
     #endregion
 
@@ -92,11 +120,14 @@ public class MainViewModel : BaseViewModel, IDisposable
 
     public MainViewModel() : base(Dispatcher.CurrentDispatcher)
     {
-        ImageViewModel = new(_dispatcher);
-        ImageViewModel.PropertyChanged += ImageViewModel_PropertyChanged;
+        ImageSettingsViewModel = new(_dispatcher);
+        ImageSettingsViewModel.PropertyChanged += ImageViewModel_PropertyChanged;
 
         ConnectionViewModel = new(_dispatcher);
         ConnectionViewModel.PropertyChanged += ConnectionViewModel_PropertyChanged;
+
+        ShowImageDialogCommand = new Command(DoShowImageDialogCommand);
+        ShowConnectionDialogCommand = new Command(DoShowConnectionView);
     }
 
     #endregion
@@ -105,9 +136,9 @@ public class MainViewModel : BaseViewModel, IDisposable
 
     private void ImageViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ImageViewModel.CardImageSet))
+        if (e.PropertyName == nameof(ImageSettingsViewModel.CardImageSet))
         {
-            CardImageSet = ImageViewModel.CardImageSet;
+            CardImageSet = ImageSettingsViewModel.CardImageSet;
         }
     }
 
@@ -123,6 +154,7 @@ public class MainViewModel : BaseViewModel, IDisposable
                 if (AccountName is not null)
                 {
                     GameViewModel = new(_dispatcher, this);
+                    GameViewModel.StartCommand.Execute(null);
                 }
                 break;
         }        

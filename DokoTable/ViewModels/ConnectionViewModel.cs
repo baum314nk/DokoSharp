@@ -1,10 +1,12 @@
-﻿using DokoTable.ViewModels.Commands;
+﻿using DokoTable.Models;
+using DokoTable.ViewModels.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -91,11 +93,14 @@ public class ConnectionViewModel : BaseViewModel, IDisposable
     public ICommand ConnectCommand { get; init; }
     private void DoConnect()
     {
+        // TODO: Client should only be assigned after successful connection
         var client = new DokoTcpClient(ServerHostname, _serverPort);
         try
         {
             client.Connect();
             Client = client;
+            AccountName = "player1";
+            CloseAction?.Invoke();
         }
         catch (SocketException)
         {
@@ -108,6 +113,8 @@ public class ConnectionViewModel : BaseViewModel, IDisposable
     {
         Client?.Close();
         Client = null;
+
+        CloseAction?.Invoke();
     }
 
     #endregion

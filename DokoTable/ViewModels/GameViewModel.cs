@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Threading;
 using DokoSharp.Lib;
-using DokoSharp.Lib.Messaging;
 using System.IO;
 using DokoTable.Controls;
 using System.Windows.Controls;
@@ -22,6 +21,8 @@ using DokoTable.ViewModels.WindowDialogService;
 using System.Text.Json;
 using System.Net.Sockets;
 using DokoTable.Models;
+using DokoSharp.Server.Messaging;
+using Utils = DokoSharp.Server.Utils;
 
 namespace DokoTable.ViewModels;
 
@@ -117,6 +118,18 @@ public class GameViewModel : BaseViewModel
 
     #endregion
 
+    #region Commands
+
+    public ICommand StartCommand { get; init; }
+    private void DoStart()
+    {
+        _client.StartListen();
+    }
+
+    #endregion
+
+    #region Constructor
+
     public GameViewModel(Dispatcher dispatcher, MainViewModel parent) : base(dispatcher)
     {
         _parent = parent;
@@ -125,10 +138,17 @@ public class GameViewModel : BaseViewModel
         PlayerName = parent.AccountName!;
         State = new();
 
+        _cardImageSet = parent.CardImageSet;
         _dialogService = parent.DialogService!;
         _client = parent.Client!;
-        _client.MessageReceived += Client_MessageReceived;
+        _client.MessageReceived += (sender, e) => BeginInvoke(() => Client_MessageReceived(sender, e));
+
+        StartCommand = new Command(DoStart);
     }
+
+    #endregion
+
+    #region Event Handlers
 
     private void Parent_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -139,6 +159,8 @@ public class GameViewModel : BaseViewModel
                 break;
         }
     }
+
+    #endregion
 
     #region Message Handlers
 
@@ -311,6 +333,7 @@ public class GameViewModel : BaseViewModel
         _dialogService.ShowInfoDialog($"Results of round {State.RoundNumber}",
 $@"Winner: {(msg.RePartyWon ? "Re" : "Contra")} party
 Base points: {msg.BasePoints}
+Solo: {msg.ReParty!.Count == 1}
 Re party:
   Members: {string.Join(", ", msg.ReParty!)}
   Value: {msg.ReValue}
@@ -325,5 +348,4 @@ Contra party:
     }
 
     #endregion
-
 }

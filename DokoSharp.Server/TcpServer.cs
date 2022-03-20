@@ -6,8 +6,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using DokoSharp.Lib;
-using DokoSharp.Lib.Messaging;
 using DokoSharp.Lib.Rulings;
+using DokoSharp.Server.Messaging;
 using Serilog;
 
 namespace DokoSharp.Server;

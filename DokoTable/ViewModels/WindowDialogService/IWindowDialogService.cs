@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DokoTable.ViewModels.WindowDialogService;
 
@@ -16,7 +17,7 @@ public interface IWindowDialogService
     /// <param name="title"></param>
     /// <param name="datacontext"></param>
     /// <returns></returns>
-    bool ShowDialog(string title, object content);
+    bool ShowDialog(string title, object content, bool controlButtonsDisabled = true);
 
     bool ShowChoiceDialog<T>(string title, IEnumerable<T> choices, out T result);
 

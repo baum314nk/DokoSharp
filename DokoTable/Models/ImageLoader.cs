@@ -14,7 +14,7 @@ using System.Reflection;
 using DokoSharp.Lib;
 using System.ComponentModel;
 
-namespace DokoTable.ViewModels;
+namespace DokoTable.Models;
 
 /// <summary>
 /// Contains information about an image set.
@@ -156,12 +156,12 @@ public class ImageLoader
             // Get color & symbol of card image by using the captured groups from the filename
             // and the name maps defined in the config file if given.
             var aliasColor = match.Groups["color"].Value;
-            var color = (config.ColorMap != null && config.ColorMap.ContainsKey(aliasColor)) ?
+            var color = config.ColorMap != null && config.ColorMap.ContainsKey(aliasColor) ?
                 config.ColorMap![aliasColor] :
                 aliasColor;
 
             var aliasSymbol = match.Groups["symbol"].Value;
-            var symbol = (config.SymbolMap != null && config.SymbolMap.ContainsKey(aliasSymbol)) ?
+            var symbol = config.SymbolMap != null && config.SymbolMap.ContainsKey(aliasSymbol) ?
                 config.SymbolMap[aliasSymbol] :
                 aliasSymbol;
 

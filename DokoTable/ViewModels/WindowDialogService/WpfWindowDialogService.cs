@@ -55,9 +55,9 @@ public class WpfWindowDialogService : IWindowDialogService
         ShowDialog(title, infoControl);
     }
 
-    public bool ShowDialog(string title, object content)
+    public bool ShowDialog(string title, object content, bool controlButtonsDisabled = true)
     {
-        var window = new WindowDialog
+        var window = new WindowDialog(controlButtonsDisabled)
         {
             Title = title,
             DataContext = content,

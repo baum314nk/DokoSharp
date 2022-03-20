@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace DokoSharp.Lib.Messaging;
+namespace DokoSharp.Server.Messaging;
 
 /// <summary>
 /// A custom JSON converter that can handle <see cref="Message"/> and its subclasses.
@@ -19,7 +19,7 @@ public class MessageJsonConverter : JsonConverter<Message>
     }
 
     public override Message? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {   
+    {
         // Check for null values
         if (reader.TokenType == JsonTokenType.Null) return null;
 

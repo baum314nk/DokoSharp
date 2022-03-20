@@ -12,7 +12,7 @@
         mc:Ignorable="d"
         WindowState="Maximized"
         Title="DokoTable" 
-        Height="900" Width="1600" 
+        Width="1600" Height="900"
         Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <wds:WpfWindowDialogService x:Key="dialogService"
@@ -28,6 +28,36 @@
         <vw:MainViewModel DialogService="{StaticResource dialogService}"/>
     </Window.DataContext>
     <Grid>
-        <views:GameView DataContext="{Binding GameViewModel}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0" Grid.ColumnSpan="99">
+            <MenuItem Header="Connection" Command="{Binding ShowConnectionDialogCommand}" Height="25" />
+            <MenuItem Header="Settings" Height="25">
+                <MenuItem Header="Images" Command="{Binding ShowImageDialogCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- GameView -->
+        <views:GameView DataContext="{Binding GameViewModel}" Grid.Row="1"/>
+
+        <GridSplitter Width="1" Grid.Column="1" Grid.Row="1" 
+                      HorizontalAlignment="Center"
+                      Background="LightGray" />
+
+        <!-- Log -->
+        <RichTextBox x:Name="txtLog" Grid.Column="2" 
+                     Background="#FF363636" 
+                     Foreground="#FFD9D9D9"
+                     VerticalScrollBarVisibility="Auto"
+                     FontFamily="monospace" Margin="10,10,10,10" Grid.Row="1"/>
     </Grid>
 </Window>

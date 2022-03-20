@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DokoSharp.Lib.Messaging;
 using Serilog;
 
 namespace DokoSharp.Lib;
@@ -15,16 +14,6 @@ namespace DokoSharp.Lib;
 public static class Utils
 {
     private static readonly Random rng = new();
-
-    public static readonly JsonSerializerOptions DefaultJsonOptions;
-    public static readonly JsonSerializerOptions BeautifyJsonOptions;
-
-    static Utils()
-    {
-        DefaultJsonOptions = new();
-        DefaultJsonOptions.Converters.Add(new MessageJsonConverter());
-        BeautifyJsonOptions = new(DefaultJsonOptions) { WriteIndented = true };
-    }
 
     public static IEnumerable<string> ToIdentifiers<T>(this IEnumerable<T> identifiables) where T : IIdentifiable
     {

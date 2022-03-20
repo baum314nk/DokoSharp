@@ -7,14 +7,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
-using DokoSharp.Lib.Messaging;
 using System.Text.Json;
 using System.Threading;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using DokoSharp.Server.Messaging;
+using Utils = DokoSharp.Server.Utils;
 
-namespace DokoTable.ViewModels;
+namespace DokoTable.Models;
 
 public class DokoTcpClient : IDisposable
 {
@@ -24,6 +25,7 @@ public class DokoTcpClient : IDisposable
     private NetworkStream? _stream;
     private StreamReader? _reader;
     private StreamWriter? _writer;
+    private CancellationTokenSource? _listernerTokenSource;
     private bool disposedValue;
 
     #endregion
@@ -38,7 +40,12 @@ public class DokoTcpClient : IDisposable
     /// <summary>
     /// A flag that is true when the server is running and false otherwise.
     /// </summary>
-    public bool IsConnected { get; set; } = false;
+    public bool IsConnected { get; protected set; } = false;
+
+    /// <summary>
+    /// True if the client is listening for incoming messages, otherwise false.
+    /// </summary>
+    public bool IsListening => _listernerTokenSource is not null;
 
     /// <summary>
     /// The collection used to communicate the reply values between tasks.
@@ -78,7 +85,7 @@ public class DokoTcpClient : IDisposable
     public DokoTcpClient(string ipAddress, int port)
     {
         ServerEndpoint = new(IPAddress.Parse(ipAddress), port);
-        ReplyValues = new(2, new []
+        ReplyValues = new(2, new[]
         {
             new KeyValuePair<string, object?>("PlaceCard", null),
             new KeyValuePair<string, object?>("Announcement", Announcement.None),
@@ -110,7 +117,8 @@ public class DokoTcpClient : IDisposable
         try
         {
             _client.Connect(ServerEndpoint);
-        } catch(SocketException ex)
+        }
+        catch (SocketException ex)
         {
             Log.Error("Error while trying to connect to the server: {error}", ex.Message);
             throw ex;
@@ -120,8 +128,6 @@ public class DokoTcpClient : IDisposable
         _writer = new(_stream);
         IsConnected = true;
         Log.Information("Connection successful.");
-
-        Task.Run(MessageLoop);
     }
 
     /// <summary>
@@ -137,9 +143,57 @@ public class DokoTcpClient : IDisposable
         }
 
         Log.Information("Stopping the client.");
+
+        if (IsListening) StopListen();
         IsConnected = false;
         _client!.Close();
         _client = null;
+    }
+
+    /// <summary>
+    /// Starts a separate thread that listens to messages from the server.
+    /// Does nothing if the client isn't connected or already listening.
+    /// </summary>
+    public void StartListen()
+    {
+        if (!IsConnected)
+        {
+            Log.Debug("The client isn't connected, can't listen. Aborting.");
+            return;
+        }
+        if (IsListening)
+        {
+            Log.Debug("The client is already listening. Aborting.");
+            return;
+        }
+
+        _listernerTokenSource = new CancellationTokenSource();
+        Task.Run(MessageLoop, cancellationToken: _listernerTokenSource.Token);
+        Log.Information("Start listening for incoming messages.");
+    }
+
+    /// <summary>
+    /// Stops the listening thread.
+    /// Does nothing if the client isn't listening.
+    /// </summary>
+    public void StopListen()
+    {
+        if (!IsListening)
+        {
+            Log.Debug("The client isn't listening. Aborting.");
+            return;
+        }
+
+        try
+        {
+            _listernerTokenSource!.Cancel();
+        }
+        finally
+        {
+            _listernerTokenSource!.Dispose();
+            _listernerTokenSource = null;
+        }
+        Log.Information("Stopped listening for incoming messages.");
     }
 
     /// <summary>
@@ -300,7 +354,7 @@ public class DokoTcpClient : IDisposable
 
         SendMessage(new ReplyReservationMessage()
         {
-            ReservationName = (reservation == string.Empty) ? null : reservation,
+            ReservationName = reservation == string.Empty ? null : reservation,
         });
     }
 
@@ -310,6 +364,7 @@ public class DokoTcpClient : IDisposable
         {
             if (disposing)
             {
+                _listernerTokenSource?.Dispose();
                 _client?.Dispose();
                 _client = null;
                 _stream = null;

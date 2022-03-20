@@ -21,6 +21,8 @@ namespace DokoTable.Controls.Dialogs
     /// </summary>
     public partial class WindowDialog : Window
     {
+        #region Static
+
         [DllImport("user32.dll")]
         static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
         [DllImport("user32.dll")]
@@ -31,8 +33,13 @@ namespace DokoTable.Controls.Dialogs
 
         const uint SC_CLOSE = 0xF060;
 
-        public WindowDialog()
+        #endregion
+
+        public bool ControlButtonsDisabled { get; protected set; }
+
+        public WindowDialog(bool controlButtonsDisabled)
         {
+            ControlButtonsDisabled = controlButtonsDisabled;
             InitializeComponent();
         }
 
@@ -40,12 +47,15 @@ namespace DokoTable.Controls.Dialogs
         {
             base.OnSourceInitialized(e);
 
-            // Disable close button
-            IntPtr hwnd = new WindowInteropHelper(this).Handle;
-            IntPtr hMenu = GetSystemMenu(hwnd, false);
-            if (hMenu != IntPtr.Zero)
+            // Disable control buttons
+            if (ControlButtonsDisabled)
             {
-                EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+                IntPtr hwnd = new WindowInteropHelper(this).Handle;
+                IntPtr hMenu = GetSystemMenu(hwnd, false);
+                if (hMenu != IntPtr.Zero)
+                {
+                    EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+                }
             }
         }
 

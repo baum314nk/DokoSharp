@@ -10,13 +10,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Serilog;
 using DokoTable.ViewModels.Commands;
+using DokoTable.Models;
 
 namespace DokoTable.ViewModels;
 
 /// <summary>
 /// A viewmodel that handles the loading of various images.
 /// </summary>
-public class ImageViewModel : BaseViewModel
+public class ImageSettingsViewModel : BaseViewModel
 {
     #region Fields
 
@@ -120,7 +121,7 @@ public class ImageViewModel : BaseViewModel
 
     #region Constructor
 
-    public ImageViewModel(Dispatcher dispatcher) : base(dispatcher)
+    public ImageSettingsViewModel(Dispatcher dispatcher) : base(dispatcher)
     {
         _imageLoader = new();
 

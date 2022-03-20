@@ -31,8 +31,17 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        // Setup logging
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Debug(Serilog.Events.LogEventLevel.Debug)
+            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Information)
+            .CreateLogger();
+
         // Load default card images
-        MainContext.ImageViewModel.LoadDefaultImageSetCommand.Execute(null);
+        MainContext.ImageSettingsViewModel.LoadDefaultImageSetCommand.Execute(null);
+        // Show connection dialog
+        MainContext.ShowConnectionDialogCommand.Execute(null);
     }
 
     private void Window_Closed(object sender, EventArgs e)

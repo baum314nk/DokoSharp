@@ -1,11 +1,12 @@
-﻿using System;
+﻿using DokoSharp.Lib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace DokoSharp.Lib.Messaging;
+namespace DokoSharp.Server.Messaging;
 
 /// <summary>
 /// A request message that expects the player to reply with a card valid for the trick.

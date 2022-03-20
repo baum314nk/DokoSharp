@@ -8,7 +8,7 @@
     <StartupObject>DokoTable.App</StartupObject>
     <ReleaseDir>$(SolutionDir)releases\$(MSBuildProjectName)\</ReleaseDir>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
-    <AssemblyVersion>0.1.0.1</AssemblyVersion>
+    <AssemblyVersion>0.1.1.0</AssemblyVersion>
   </PropertyGroup>
 
   <Target Name="CopyRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' ">
@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DokoSharp.Lib\DokoSharp.Lib.csproj" />
+    <ProjectReference Include="..\DokoSharp.Server\DokoSharp.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

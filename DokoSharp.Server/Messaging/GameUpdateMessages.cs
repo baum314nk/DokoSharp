@@ -1,11 +1,12 @@
-﻿using System;
+﻿using DokoSharp.Lib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace DokoSharp.Lib.Messaging;
+namespace DokoSharp.Server.Messaging;
 
 public class GameCreatedMessage : Message
 {
@@ -58,7 +59,7 @@ public class RoundCreatedMessage : Message
 
 public class RoundStartedMessage : Message
 {
-    public const string SUBJECT =  "UPDATE_RoundStarted";
+    public const string SUBJECT = "UPDATE_RoundStarted";
 
     public override string Subject => SUBJECT;
 
@@ -85,7 +86,7 @@ public class RegistrationsAppliedMessage : Message
 
 public class RoundFinishedMessage : Message
 {
-    public const string SUBJECT =  "UPDATE_RoundFinished";
+    public const string SUBJECT = "UPDATE_RoundFinished";
 
     public override string Subject => SUBJECT;
 

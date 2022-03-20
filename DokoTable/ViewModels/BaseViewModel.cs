@@ -20,6 +20,12 @@ public abstract class BaseViewModel : IViewModel
 
     #endregion
 
+    /// <summary>
+    /// An action that is invoked when the associated view should close.
+    /// </summary>
+    public Action? CloseAction { get; set; }
+
+
     protected BaseViewModel(Dispatcher dispatcher)
     {
         _dispatcher = dispatcher;
@@ -31,7 +37,7 @@ public abstract class BaseViewModel : IViewModel
 
     protected void RaisePropertyChanged(string property)
     {
-        Log.Debug($"Property {property} of DokoViewModel changed.");
+        Log.Debug($"Property {property} of {this.GetType().Name} changed.");
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
     }
     public bool IsSynchronized => throw new NotImplementedException();

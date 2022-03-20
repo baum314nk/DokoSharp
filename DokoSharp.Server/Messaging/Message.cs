@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace DokoSharp.Lib.Messaging;
+namespace DokoSharp.Server.Messaging;
 
 /// <summary>
 /// Describes a generic message for the Doko game.
