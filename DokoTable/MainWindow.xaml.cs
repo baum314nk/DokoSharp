@@ -22,7 +22,7 @@ namespace DokoTable;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public DokoViewModel DokoContext => (DokoViewModel)DataContext;
+    public MainViewModel MainContext => (MainViewModel)DataContext;
 
     public MainWindow()
     {
@@ -31,18 +31,12 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        // Setup logging
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Debug(Serilog.Events.LogEventLevel.Debug)
-            .WriteTo.RichTextBox(txtLog, Serilog.Events.LogEventLevel.Debug)
-            .CreateLogger();
-
         // Load default card images
-        DokoContext.LoadDefaultImageSetCommand.Execute(null);
+        MainContext.ImageViewModel.LoadDefaultImageSetCommand.Execute(null);
     }
 
     private void Window_Closed(object sender, EventArgs e)
     {
-        DokoContext.Dispose();
+        MainContext.Dispose();
     }
 }

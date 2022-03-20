@@ -16,7 +16,7 @@ using System.Diagnostics;
 
 namespace DokoTable.ViewModels;
 
-public class DokoClient : IDisposable
+public class DokoTcpClient : IDisposable
 {
     #region Fields
 
@@ -38,7 +38,7 @@ public class DokoClient : IDisposable
     /// <summary>
     /// A flag that is true when the server is running and false otherwise.
     /// </summary>
-    public bool IsRunning { get; set; } = false;
+    public bool IsConnected { get; set; } = false;
 
     /// <summary>
     /// The collection used to communicate the reply values between tasks.
@@ -73,7 +73,9 @@ public class DokoClient : IDisposable
 
     #endregion
 
-    public DokoClient(string ipAddress, int port)
+    #region Constructor
+
+    public DokoTcpClient(string ipAddress, int port)
     {
         ServerEndpoint = new(IPAddress.Parse(ipAddress), port);
         ReplyValues = new(2, new []
@@ -88,16 +90,18 @@ public class DokoClient : IDisposable
         ReplyValuesUpdated = new(false);
     }
 
+    #endregion
+
     #region Public Methods
 
     /// <summary>
-    /// Starts the Doko server instance and waits for incoming connections.
+    /// Connects to the Doko server and starts a thread that is waiting for incoming messages.
     /// </summary>
-    public void Start()
+    public void Connect()
     {
-        if (IsRunning)
+        if (IsConnected)
         {
-            Log.Debug("The client is already running. Aborting.");
+            Log.Debug("The client is already connected. Aborting.");
             return;
         }
 
@@ -114,22 +118,26 @@ public class DokoClient : IDisposable
         _stream = _client.GetStream();
         _reader = new(_stream);
         _writer = new(_stream);
-        IsRunning = true;
+        IsConnected = true;
         Log.Information("Connection successful.");
 
         Task.Run(MessageLoop);
     }
 
-    public void Stop()
+    /// <summary>
+    /// Closes the connection to the Doko server and stops the thread waiting for messages.
+    /// Does nothing if the client isn't connected.
+    /// </summary>
+    public void Close()
     {
-        if (!IsRunning)
+        if (!IsConnected)
         {
             Log.Debug("The client isn't running. Aborting.");
             return;
         }
 
         Log.Information("Stopping the client.");
-        IsRunning = false;
+        IsConnected = false;
         _client!.Close();
         _client = null;
     }
@@ -154,7 +162,7 @@ public class DokoClient : IDisposable
 
     protected void MessageLoop()
     {
-        while (IsRunning)
+        while (IsConnected)
         {
             Message message = ReceiveMessage<Message>();
 

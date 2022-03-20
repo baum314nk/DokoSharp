@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using DokoSharp.Lib;
+using System.ComponentModel;
 
 namespace DokoTable.ViewModels;
 
@@ -138,7 +139,7 @@ public class ImageLoader
     /// <param name="setName"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public IEnumerable<KeyValuePair<CardBase, byte[]>> LoadImages(string setName)
+    public async IAsyncEnumerable<KeyValuePair<CardBase, byte[]>> LoadImagesAsync(string setName)
     {
         if (!_imageSetConfigs.TryGetValue(setName, out ImageSetConfig? config))
         {
@@ -169,7 +170,7 @@ public class ImageLoader
             if (card == null) continue;
 
             // Load image from file
-            var imgRaw = File.ReadAllBytes(filePath);
+            var imgRaw = await File.ReadAllBytesAsync(filePath);
 
             yield return new KeyValuePair<CardBase, byte[]>(card, imgRaw);
         }

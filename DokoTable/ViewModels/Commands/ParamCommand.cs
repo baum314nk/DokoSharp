@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace DokoTable.ViewModels.Commands;
 
-public class RelayCommand<T> : ICommand
+public class ParamCommand<T> : ICommand
 {
     private readonly Action<T?> _execute;
     private readonly Predicate<T?>? _canExecute;
@@ -14,7 +14,7 @@ public class RelayCommand<T> : ICommand
         remove => CommandManager.RequerySuggested -= value;
     }
 
-    public RelayCommand(Action<T?> execute, Predicate<T?>? canExecute = null)
+    public ParamCommand(Action<T?> execute, Predicate<T?>? canExecute = null)
     {
         _execute = execute;
         _canExecute = canExecute;

@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace DokoTable.ViewModels.Commands;
 
-public class SimpleCommand : ICommand
+public class Command : ICommand
 {
     private readonly Action _execute;
     private readonly Func<bool>? _canExecute;
@@ -14,7 +14,7 @@ public class SimpleCommand : ICommand
         remove => CommandManager.RequerySuggested -= value;
     }
 
-    public SimpleCommand(Action execute, Func<bool>? canExecute = null)
+    public Command(Action execute, Func<bool>? canExecute = null)
     {
         _execute = execute;
         _canExecute = canExecute;

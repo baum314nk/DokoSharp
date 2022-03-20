@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpf="clr-namespace:Xceed.Wpf.Toolkit;assembly=DotNetProjects.Wpf.Extended.Toolkit"
         xmlns:vw="clr-namespace:DokoTable.ViewModels" 
-        xmlns:controls="clr-namespace:DokoTable.Controls"
+        xmlns:views="clr-namespace:DokoTable.Views"
         xmlns:wds="clr-namespace:DokoTable.ViewModels.WindowDialogService"
         xmlns:dialogs="clr-namespace:DokoTable.Controls.Dialogs"
         xmlns:conv="clr-namespace:DokoTable.Convertes"
@@ -25,96 +25,9 @@
         <ImageBrush ImageSource="/Assets/green_table_texture.jpg" TileMode="FlipXY" ViewportUnits="Absolute" Viewport="0,0,467,612"/>
     </Window.Background>
     <Window.DataContext>
-        <vw:DokoViewModel DialogService="{StaticResource dialogService}"/>
+        <vw:MainViewModel DialogService="{StaticResource dialogService}"/>
     </Window.DataContext>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="2*" MinWidth="300px"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="3*" MinHeight="220"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition MinHeight="220"/>
-        </Grid.RowDefinitions>
-        <!-- Log -->
-        <RichTextBox x:Name="txtLog" Grid.Column="2" 
-                     Background="#FF363636" 
-                     Foreground="#FFD9D9D9"
-                     VerticalScrollBarVisibility="Auto"
-                     FontFamily="monospace" Margin="10,10,10,10"/>
-
-        <GridSplitter Width="1" Grid.Column="1" Grid.RowSpan="3" 
-                      HorizontalAlignment="Center"
-                      Background="LightGray" />
-
-        <GridSplitter Height="1" Grid.Row="1" Grid.ColumnSpan="3" 
-                      HorizontalAlignment="Stretch"
-                      Background="LightGray" />
-
-        <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" FontSize="18" Margin="0,0,0,16"/>
-
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*" MinHeight="220"/>
-                <RowDefinition Height="1*"/>
-            </Grid.RowDefinitions>
-            <!-- Placed Cards -->
-            <controls:CardListControl Cards="{Binding PlacedCards}" CardImages="{Binding CardImages}" Grid.Row="1"
-                                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
-        </Grid>
-
-        <!-- Hand Cards -->
-        <controls:HandCardControl Cards="{Binding HandCards}" CardImages="{Binding CardImages}" 
-                                  SelectableCards="{Binding PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
-                                  Grid.Row="2"/>
-
-        <!-- Command Area -->
-        <Grid Grid.Row="3" Grid.Column="3">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
-            </Grid.RowDefinitions>
-
-            <ComboBox x:Name="cmbAvailableImageSets" ItemsSource="{Binding AvailableImageSets}" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="10,10,100,0" />
-            <Button Content="Load Images" Command="{Binding LoadImageSetCommand}" CommandParameter="{Binding SelectedItem, ElementName=cmbAvailableImageSets}"
-                HorizontalAlignment="Right" VerticalAlignment="Top" 
-                Width="80" Height="25" Margin="0,8,10,0"/>
-
-            <Label Content="Announcement: " 
-                   Grid.Row="1"
-                   HorizontalAlignment="Left" VerticalAlignment="Center"/>
-            <ComboBox ItemsSource="{Binding AvailableAnnouncements}" DisplayMemberPath="Name" IsEnabled="{Binding CanMakeAnnouncement}"
-                      SelectedValuePath="Announcement" SelectedValue="{Binding SelectedAnnouncement, Mode=TwoWay}"
-                      Grid.Row="1"
-                      VerticalAlignment="Center" HorizontalAlignment="Left" Margin="102,0,0,0" Width="150" />
-
-            <Button Content="Connect" Command="{Binding ConnectCommand}"
-                Grid.Row="4" 
-                HorizontalAlignment="Left" VerticalAlignment="Center" 
-                Width="80" Height="25" Margin="10,0,0,0"/>
-            <Label Content="Hostname:" 
-               Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,199,0" HorizontalAlignment="Right"/>
-            <TextBox Text="{Binding ServerHostname}" VerticalContentAlignment="Center"
-                Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,114,0" HorizontalAlignment="Right" Width="80"/>
-            <Label Content="Port:" 
-               Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,75,0" HorizontalAlignment="Right"/>
-            <TextBox Text="{Binding ServerPort}" VerticalContentAlignment="Center"
-                Grid.Row="4" VerticalAlignment="Center" Height="25" Margin="0,0,10,0" HorizontalAlignment="Right" Width="60"/>
-
-        </Grid>
-        <!--<wpf:IntegerUpDown Value="{Binding RoundsToPlay}" 
-                           Grid.Column="2" Grid.Row="2" 
-                           HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                           Width="80" Height="25" Margin="0,0,15,10"/>
-        <Label Content="Rounds to play:" 
-               Grid.Row="2" Grid.Column="2" 
-               VerticalAlignment="Bottom" HorizontalAlignment="Right" 
-               Height="25" Width="95" Margin="0,0,100,10" />-->
+        <views:GameView DataContext="{Binding GameViewModel}"/>
     </Grid>
 </Window>
