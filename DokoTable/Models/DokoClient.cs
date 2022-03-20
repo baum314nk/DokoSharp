@@ -88,6 +88,8 @@ public class DokoClient : IDisposable
         ReplyValuesUpdated = new(false);
     }
 
+    #region Public Methods
+
     /// <summary>
     /// Starts the Doko server instance and waits for incoming connections.
     /// </summary>
@@ -145,6 +147,8 @@ public class DokoClient : IDisposable
         Log.Debug("Message sent: {msg}", JsonSerializer.Serialize(msg, Utils.BeautifyJsonOptions));
         MessageSent?.Invoke(this, new(msg));
     }
+
+    #endregion
 
     #region Overrides & Implementations
 

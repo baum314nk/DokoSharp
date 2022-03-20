@@ -41,7 +41,7 @@ public class DummyController : IPlayerController
 
     }
 
-    public void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards)
+    public void SignalRemovedCards(Player player, IEnumerable<Card> droppedCards)
     {
 
     }

@@ -19,11 +19,11 @@ public interface IPlayerController
     void SignalReceivedCards(Player player, IEnumerable<Card> receivedCards, bool clearedOldCards);
 
     /// <summary>
-    /// Signals the controller that the player dropped cards.
+    /// Signals the controller that the player removed cards.
     /// </summary>
     /// <param name="player"></param>
-    /// <param name="droppedCards"></param>
-    void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards);
+    /// <param name="removedCards"></param>
+    void SignalRemovedCards(Player player, IEnumerable<Card> removedCards);
 
     /// <summary>
     /// Requests a card from the controller to place into a trick.

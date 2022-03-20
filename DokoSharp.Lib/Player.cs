@@ -99,6 +99,26 @@ public class Player : IIdentifiable
     }
 
     /// <summary>
+    /// Removes the given cards from the players hand.
+    /// Throws an exception if one of the cards to be removed isn't
+    /// in the players hand.
+    /// </summary>
+    /// <param name="removedCards"></param>
+    public void RemoveCards(IEnumerable<Card> removedCards)
+    {
+        // Remove cards from hand
+        foreach (Card card in removedCards)
+        {
+            if (!_cards!.Remove(card))
+            {
+                throw new ArgumentException($"The card {card} doesn't exist in player {Identifier}s hand.");
+            }
+        }
+        Log.Debug("Player {player} removed the cards: {cards}.", Name, removedCards);
+        _controller.SignalRemovedCards(this, removedCards);
+    }
+
+    /// <summary>
     /// Returns true if the player has at least one trump card in hand.
     /// </summary>
     /// <returns></returns>
@@ -167,22 +187,14 @@ public class Player : IIdentifiable
 
     /// <summary>
     /// Requests a given amount of hand card from the player.
-    /// The cards are removed from his hand.
     /// </summary>
-    /// <returns>The chosen hand card.</returns>
-    public IEnumerable<Card> DropCards(string requestText, int amount = 1)
+    /// <returns>The chosen hand cards.</returns>
+    public IEnumerable<Card> DecideCards(string requestText, int amount = 1)
     {
         if (Cards is null) throw new Exception("Player can't hand out a card because his hand is empty.");
         if (Cards.Count < amount) throw new Exception($"Player can't hand out {amount} cards because he only has {Cards!.Count} in hand.");
 
-        var selectedCards = _controller.RequestCards(this, amount, requestText);
-
-        // Remove cards from hand and return them
-        selectedCards.ForEach(c => _cards!.Remove(c));
-        Log.Debug("Player {player} dropped the cards: {cards}.", Name, selectedCards);
-        _controller.SignalDroppedCards(this, selectedCards);
-
-        return selectedCards;
+        return _controller.RequestCards(this, amount, requestText);
     }
 
     /// <summary>

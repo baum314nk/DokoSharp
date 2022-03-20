@@ -49,7 +49,7 @@ public class TcpController : IPlayerController, IDisposable
         });
     }
 
-    public void SignalDroppedCards(Player player, IEnumerable<Card> droppedCards)
+    public void SignalRemovedCards(Player player, IEnumerable<Card> droppedCards)
     {
         // Send message
         SendMessage(new CardsDroppedMessage()

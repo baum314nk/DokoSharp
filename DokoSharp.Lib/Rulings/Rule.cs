@@ -211,10 +211,19 @@ public class Rule : IIdentifiable
                 return;
             }
 
-            // Armut party exchanges 2 cards
-            var armutCards = armutPlayer.DropCards("Please select the 2 cards you want to give your partner.", 2);
+            // Request 3 cards from Armut player
+            var armutCards = armutPlayer.DecideCards("Please select the 2 cards you want to give your partner.", 2);
+            // Verfiy that all Trump cards are included
+            var trumpCards = armutPlayer.Cards.Where(c => c.IsTrump);
+            while (!trumpCards.All(c => armutCards.Contains(c)))
+            {
+                armutCards = armutPlayer.DecideCards("Please select the 2 cards you want to give your partner.", 2);
+            }
+            // Give 3 cards to member player
             memberPlayer.ReceiveCards(armutCards);
-            var memberCards = memberPlayer.DropCards("Please select the 2 cards you want to give your partner.", 2);
+            // Request 3 cards from member player
+            var memberCards = memberPlayer.DecideCards("Please select the 2 cards you want to give your partner.", 2);
+            // Give 3 cards to Armut player
             armutPlayer.ReceiveCards(memberCards);
             Log.Information("Armut party exchanged 2 cards.");
 
