@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace DokoTable.Controls;
 
-public class FittingPanel : Panel
+public class HandCardsPanel : Panel
 {
     private UIElement? _hoveredChild;
 
@@ -177,7 +177,7 @@ public class FittingPanel : Panel
 /// <summary>
 /// Interaction logic for HandCardsControl.xaml
 /// </summary>
-public partial class HandCardControl : UserControl
+public partial class HandCardsControl : UserControl
 {
     public IDictionary<CardBase, BitmapImage>? CardImages
     {
@@ -188,7 +188,7 @@ public partial class HandCardControl : UserControl
         DependencyProperty.Register(
             "CardImages",
             typeof(IDictionary<CardBase, BitmapImage>),
-            typeof(HandCardControl),
+            typeof(HandCardsControl),
             new PropertyMetadata(null)
         );
 
@@ -201,7 +201,7 @@ public partial class HandCardControl : UserControl
         DependencyProperty.Register(
             "Cards",
             typeof(IEnumerable<CardBase>),
-            typeof(HandCardControl),
+            typeof(HandCardsControl),
             new PropertyMetadata(null)
         );
 
@@ -214,7 +214,7 @@ public partial class HandCardControl : UserControl
         DependencyProperty.Register(
             "SelectableCards",
             typeof(IEnumerable<CardBase>),
-            typeof(HandCardControl),
+            typeof(HandCardsControl),
             new PropertyMetadata(null)
         );
 
@@ -227,11 +227,11 @@ public partial class HandCardControl : UserControl
         DependencyProperty.Register(
             "SelectedCard",
             typeof(CardBase),
-            typeof(HandCardControl),
+            typeof(HandCardsControl),
             new PropertyMetadata(null)
         );
 
-    public HandCardControl()
+    public HandCardsControl()
     {
         InitializeComponent();
     }

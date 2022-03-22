@@ -9,23 +9,17 @@ using System.Windows.Data;
 using DokoSharp.Lib;
 using System.Windows.Media.Imaging;
 
-namespace DokoTable.Controls;
+namespace DokoTable.Converters;
 
-public class ItemInEnumerableConverter : IMultiValueConverter
+public class IndexOfConverter : IMultiValueConverter
 {
     public object Convert(object[] value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value[0] == null) return false;
+        if (value[0] is not IList list) return -1;
 
-        var enumerable = (IEnumerable)value[0];
-        var mainItem = value[1];
+        var item = value[1];
 
-        foreach (var item in enumerable)
-        {
-            if (item == mainItem) return true;
-        }
-
-        return false;
+        return list.IndexOf(item);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

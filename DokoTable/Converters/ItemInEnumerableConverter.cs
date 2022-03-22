@@ -9,16 +9,23 @@ using System.Windows.Data;
 using DokoSharp.Lib;
 using System.Windows.Media.Imaging;
 
-namespace DokoTable.Controls;
+namespace DokoTable.Converters;
 
-public class ImageOfCardConverter : IMultiValueConverter
+public class ItemInEnumerableConverter : IMultiValueConverter
 {
     public object Convert(object[] value, Type targetType, object parameter, CultureInfo culture)
     {
-        var cardImages = (IDictionary<CardBase, BitmapImage>)value[0];
-        var card = (CardBase)value[1];
+        if (value[0] == null) return false;
 
-        return cardImages[card];
+        var enumerable = (IEnumerable)value[0];
+        var mainItem = value[1];
+
+        foreach (var item in enumerable)
+        {
+            if (item == mainItem) return true;
+        }
+
+        return false;
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

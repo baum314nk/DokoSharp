@@ -27,7 +27,10 @@ public class GameState : INotifyPropertyChanged
     #region Fields
 
     private int _numberOfRounds = 0;
+    private IReadOnlyList<string>? _playerOrder = null;
+    private string? _playerStartingRound;
     private int _roundNumber = 0;
+    private string? _playerStartingTrick;
     private int _trickNumber = 0;
     private IReadOnlyList<CardBase> _trumpCards = new List<CardBase>();
     private IReadOnlyList<CardBase> _handCards = new List<CardBase>();
@@ -50,10 +53,34 @@ public class GameState : INotifyPropertyChanged
         get => _numberOfRounds;
         set
         {
-            if (value == _numberOfRounds) return;
-
             _numberOfRounds = value;
             RaisePropertyChanged(nameof(NumberOfRounds));
+        }
+    }
+
+    /// <summary>
+    /// The order of the players on the table starting with this player.
+    /// </summary>
+    public IReadOnlyList<string>? PlayerOrder
+    {
+        get => _playerOrder;
+        set
+        {
+            _playerOrder = value;
+            RaisePropertyChanged(nameof(PlayerOrder));
+        }
+    }
+
+    /// <summary>
+    /// The player starting the current round.
+    /// </summary>
+    public string? PlayerStartingRound
+    {
+        get => _playerStartingRound;
+        set
+        {
+            _playerStartingRound = value;
+            RaisePropertyChanged(nameof(PlayerStartingRound));
         }
     }
 
@@ -65,10 +92,21 @@ public class GameState : INotifyPropertyChanged
         get => _roundNumber;
         set
         {
-            if (value == _roundNumber) return;
-
             _roundNumber = value;
             RaisePropertyChanged(nameof(RoundNumber));
+        }
+    }
+
+    /// <summary>
+    /// The player starting the current trick.
+    /// </summary>
+    public string? PlayerStartingTrick
+    {
+        get => _playerStartingTrick;
+        set
+        {
+            _playerStartingTrick = value;
+            RaisePropertyChanged(nameof(PlayerStartingTrick));
         }
     }
 
@@ -80,8 +118,6 @@ public class GameState : INotifyPropertyChanged
         get => _trickNumber;
         set
         {
-            if (value == _trickNumber) return;
-
             _trickNumber = value;
             RaisePropertyChanged(nameof(TrickNumber));
         }
@@ -95,8 +131,6 @@ public class GameState : INotifyPropertyChanged
         get => _trumpCards;
         set
         {
-            if (_trumpCards == value) return;
-
             _trumpCards = value;
             RaisePropertyChanged(nameof(TrumpCards));
         }
@@ -110,8 +144,6 @@ public class GameState : INotifyPropertyChanged
         get => _handCards;
         set
         {
-            if (_handCards == value) return;
-
             _handCards = value;
             RaisePropertyChanged(nameof(HandCards));
         }
@@ -125,8 +157,6 @@ public class GameState : INotifyPropertyChanged
         get => _placedCards;
         set
         {
-            if (_placedCards == value) return;
-
             _placedCards = value;
             RaisePropertyChanged(nameof(PlacedCards));
         }
@@ -140,8 +170,6 @@ public class GameState : INotifyPropertyChanged
         get => _placeableCards;
         set
         {
-            if (_placeableCards == value) return;
-
             _placeableCards = value;
             RaisePropertyChanged(nameof(PlaceableHandCards));
         }
@@ -183,8 +211,6 @@ public class GameState : INotifyPropertyChanged
         {
             _currentAnnouncement = value;
             RaisePropertyChanged(nameof(Announcement));
-
-            AvailableAnnouncements = GetAvailableAnnouncements();
         }
     }
 
@@ -205,6 +231,7 @@ public class GameState : INotifyPropertyChanged
     /// </summary>
     public void EndTrick()
     {
+        PlayerStartingTrick = null;
         PlacedCards = new List<CardBase>();
         PlaceableHandCards = new List<CardBase>();
     }
@@ -214,6 +241,7 @@ public class GameState : INotifyPropertyChanged
     /// </summary>
     public void EndRound()
     {
+        PlayerStartingRound = null;
         TrickNumber = 0;
         TrumpCards = new List<CardBase>();
         HandCards = new List<CardBase>();

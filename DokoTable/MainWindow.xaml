@@ -8,7 +8,7 @@
         xmlns:views="clr-namespace:DokoTable.Views"
         xmlns:wds="clr-namespace:DokoTable.ViewModels.WindowDialogService"
         xmlns:dialogs="clr-namespace:DokoTable.Controls.Dialogs"
-        xmlns:conv="clr-namespace:DokoTable.Convertes"
+        xmlns:conv="clr-namespace:DokoTable.Converters"
         mc:Ignorable="d"
         WindowState="Maximized"
         Title="DokoTable" 

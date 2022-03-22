@@ -193,6 +193,9 @@ public class GameViewModel : BaseViewModel
             // Update
             case GameCreatedMessage msg:
                 Log.Information("Doko game was created by the server. Players are {players}. The special rules are {sr}.", msg.Players, msg.SpecialRules);
+                // Determine other player order
+                int playerIdx = msg.Players!.IndexOf(PlayerName);
+                State.PlayerOrder = msg.Players.Skip(playerIdx).Concat(msg.Players.Take(playerIdx)).ToList();
                 break;
             case GameStartedMessage msg:
                 Log.Information("Doko game has started. {nor} rounds will be played.", msg.NumberOfRounds);
@@ -201,6 +204,7 @@ public class GameViewModel : BaseViewModel
             case RoundCreatedMessage msg:
                 Log.Information("Round {rn} was created. Player order is {order}.", msg.RoundNumber, msg.PlayerOrder);
                 State.RoundNumber = msg.RoundNumber;
+                State.PlayerStartingRound = msg.PlayerOrder![0];
                 break;
             case RoundStartedMessage msg:
                 Log.Information("Round has started. Trump ranking is {tr}.", msg.TrumpRanking);
@@ -221,6 +225,7 @@ public class GameViewModel : BaseViewModel
             case TrickCreatedMessage msg:
                 Log.Information("Trick {tn} was created. Player order is {order}.", msg.TrickNumber, msg.PlayerOrder);
                 State.TrickNumber = msg.TrickNumber;
+                State.PlayerStartingTrick = msg.PlayerOrder![0];
                 break;
             case AnnouncementMadeMessage msg:
                 Log.Information("Player {player} made the announcement {announcement}.", msg.Player, msg.Announcement.GetName());

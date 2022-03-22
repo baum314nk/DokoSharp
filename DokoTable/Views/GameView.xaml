@@ -4,10 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:controls="clr-namespace:DokoTable.Controls"
+             xmlns:cv="clr-namespace:DokoTable.Converters"
              xmlns:local="clr-namespace:DokoTable.Views" 
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=local:GameViewModelDT}"
              d:DesignHeight="900" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <cv:HideIfIsNullConverter x:Key="HideIfIsNull" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="3*" MinHeight="220"/>
@@ -22,25 +26,42 @@
         <!-- Table -->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*" MinHeight="220"/>
-                <RowDefinition Height="1*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="2*" MinHeight="300"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+            <!-- Player Names -->
+            <Label Content="{Binding State.PlayerOrder[0]}" Visibility="{Binding State.PlayerOrder, Converter={StaticResource HideIfIsNull}, FallbackValue=Hidden}" 
+                   Background="White" FontSize="18" Grid.Row="2"
+                   VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" />
+            <Label Content="{Binding State.PlayerOrder[1]}" Visibility="{Binding State.PlayerOrder, Converter={StaticResource HideIfIsNull}, FallbackValue=Hidden}" 
+                   Background="White" FontSize="18" Grid.Row="1"
+                   VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0" />
+            <Label Content="{Binding State.PlayerOrder[2]}" Visibility="{Binding State.PlayerOrder, Converter={StaticResource HideIfIsNull}, FallbackValue=Hidden}" 
+                   Background="White" FontSize="18" Grid.Row="0"
+                   VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0" />
+            <Label Content="{Binding State.PlayerOrder[3]}" Visibility="{Binding State.PlayerOrder, Converter={StaticResource HideIfIsNull}, FallbackValue=Hidden}" 
+                   Background="White" FontSize="18" Grid.Row="1"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" />
+
             <!-- Placed Cards -->
-            <controls:CardListControl Cards="{Binding State.PlacedCards}" CardImages="{Binding CardImageSet}" Grid.Row="1"
-                                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
-            
+            <controls:PlacedCardsControl Cards="{Binding State.PlacedCards}" CardImages="{Binding CardImageSet}"
+                                         PlayerOrder="{Binding State.PlayerOrder}" PlayerStartingTrick="{Binding State.PlayerStartingTrick}"
+                                         Grid.Row="1"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
             <!-- Info Text-->
-            <Label Content="{Binding InformationText}" VerticalAlignment="Bottom" Height="25" Margin="10,0,0,10" Grid.Row="2" HorizontalAlignment="Left"/>
-            
+            <Label Content="{Binding InformationText}" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="10,0,0,10" HorizontalAlignment="Left"/>
+
             <!-- Announcement -->
-            <Label Content="Announcement:" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Margin="0,0,165,12" Grid.Row="2"/>
+            <Label Content="Announcement:" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Margin="0,0,165,12"/>
             <ComboBox ItemsSource="{Binding State.AvailableAnnouncements}" DisplayMemberPath="Name" IsEnabled="{Binding State.CanMakeAnnouncement}"
-                  SelectedValuePath="Announcement" SelectedValue="{Binding SelectedAnnouncement, Mode=TwoWay}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="150" Margin="0,0,10,10" Grid.Row="2"/>
+                      SelectedValuePath="Announcement" SelectedValue="{Binding SelectedAnnouncement, Mode=TwoWay}" 
+                      Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="150" Margin="0,0,10,10" />
         </Grid>
 
         <!-- Hand Cards -->
-        <controls:HandCardControl Cards="{Binding State.HandCards}" CardImages="{Binding CardImageSet}" 
+        <controls:HandCardsControl Cards="{Binding State.HandCards}" CardImages="{Binding CardImageSet}" 
                                   SelectableCards="{Binding State.PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
                                   Grid.Row="2"/>
     </Grid>
