@@ -1,1 +1,0 @@
-& ".\DokoTable\bin\Debug\net6.0-windows\DokoTable.exe"

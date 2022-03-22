@@ -87,7 +87,7 @@ public class RoundDescription
     /// <summary>
     /// The number of the last trick in which the Re party can make an announcement.
     /// </summary>
-    public int LastReAnnouncementNumber { get; set; } = 3;
+    public int LastReAnnouncementNumber { get; set; } = 2;
 
     /// <summary>
     /// Returns true if the Re party contains only 1 member.
@@ -107,7 +107,7 @@ public class RoundDescription
     /// <summary>
     /// The number of the last trick in which the Contra party can make an announcement.
     /// </summary>
-    public int LastContraAnnouncementNumber { get; set; } = 3;
+    public int LastContraAnnouncementNumber { get; set; } = 2;
 
     /// <summary>
     /// The additional points of the Contra party.
@@ -486,7 +486,7 @@ public class Round
             // Skip Re entry if player is Contra party and next announcement should be Contra
             if (next == Announcement.Re && !player.IsReParty) next++;
             // Skip Contra entry if player is Re party and next announcement should be Under90
-            if (next == Announcement.Under90 && player.IsReParty) next++;
+            if (next == Announcement.Contra && player.IsReParty) next++;
 
             // Set next announcement and increment number of lastest announcement trick
             if (player.IsReParty)
