@@ -5,13 +5,26 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:controls="clr-namespace:DokoTable.Controls"
              xmlns:cv="clr-namespace:DokoTable.Converters"
+             xmlns:doko="clr-namespace:DokoSharp.Lib;assembly=DokoSharp.Lib"
              xmlns:local="clr-namespace:DokoTable.Views" 
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=local:GameViewModelDT}"
              d:DesignHeight="900" d:DesignWidth="1200">
     <UserControl.Resources>
+        <cv:IsNotNullConverter x:Key="IsNotNull" />
         <cv:HideIfIsNullConverter x:Key="HideIfIsNull" />
+        <cv:LessThanConverter x:Key="LessThan" />
+
+        <doko:Announcement x:Key="Announcement_Re">Re</doko:Announcement>
+        <doko:Announcement x:Key="Announcement_Contra">Contra</doko:Announcement>
+        <doko:Announcement x:Key="Announcement_Under90">Under90</doko:Announcement>
+        <doko:Announcement x:Key="Announcement_Under60">Under60</doko:Announcement>
+        <doko:Announcement x:Key="Announcement_Under30">Under30</doko:Announcement>
+        <doko:Announcement x:Key="Announcement_Black">Black</doko:Announcement>
     </UserControl.Resources>
+    <UserControl.IsEnabled>
+        <Binding Converter="{StaticResource IsNotNull}"/>
+    </UserControl.IsEnabled>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="3*" MinHeight="220"/>
@@ -54,14 +67,93 @@
             <Label Content="{Binding InformationText}" Grid.Row="2" VerticalAlignment="Bottom" Height="25" Margin="10,0,0,10" HorizontalAlignment="Left"/>
 
             <!-- Announcement -->
-            <Label Content="Announcement:" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Margin="0,0,165,12"/>
-            <ComboBox ItemsSource="{Binding State.AvailableAnnouncements}" DisplayMemberPath="Name" IsEnabled="{Binding State.CanMakeAnnouncement}"
+            <Button Content="Re" Command="{Binding SetSelectedAnnouncementCommand}" CommandParameter="{StaticResource Announcement_Re}"
+                    IsEnabled="{Binding State.Announcement, Converter={StaticResource LessThan}, ConverterParameter={StaticResource Announcement_Re}}"
+                    Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="60" Margin="0,0,290,10">
+                <Button.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="Control.IsEnabled" Value="False">
+                                <Setter Property="Control.Background" Value="LightGreen" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedAnnouncement}" Value="{StaticResource Announcement_Re}">
+                                <Setter Property="Control.Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="Unter 90" Command="{Binding SetSelectedAnnouncementCommand}" CommandParameter="{StaticResource Announcement_Under90}"
+                    IsEnabled="{Binding State.Announcement, Converter={StaticResource LessThan}, ConverterParameter={StaticResource Announcement_Under90}}"
+                    Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="60" Margin="0,0,220,10">
+                <Button.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="Control.IsEnabled" Value="False">
+                                <Setter Property="Control.Background" Value="LightGreen" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedAnnouncement}" Value="{StaticResource Announcement_Under90}">
+                                <Setter Property="Control.Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="Unter 60" Command="{Binding SetSelectedAnnouncementCommand}" CommandParameter="{StaticResource Announcement_Under60}"
+                    IsEnabled="{Binding State.Announcement, Converter={StaticResource LessThan}, ConverterParameter={StaticResource Announcement_Under60}}"
+                    Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="60" Margin="0,0,150,10">
+                <Button.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="Control.IsEnabled" Value="False">
+                                <Setter Property="Control.Background" Value="LightGreen" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedAnnouncement}" Value="{StaticResource Announcement_Under60}">
+                                <Setter Property="Control.Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="Unter 30" Command="{Binding SetSelectedAnnouncementCommand}" CommandParameter="{StaticResource Announcement_Under30}"
+                    IsEnabled="{Binding State.Announcement, Converter={StaticResource LessThan}, ConverterParameter={StaticResource Announcement_Under30}}"
+                    Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="60" Margin="0,0,80,10">
+                <Button.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="Control.IsEnabled" Value="False">
+                                <Setter Property="Control.Background" Value="LightGreen" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedAnnouncement}" Value="{StaticResource Announcement_Under30}">
+                                <Setter Property="Control.Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style></Button>
+            <Button Content="Schwarz" Command="{Binding SetSelectedAnnouncementCommand}" CommandParameter="{StaticResource Announcement_Black}"
+                    IsEnabled="{Binding State.Announcement, Converter={StaticResource LessThan}, ConverterParameter={StaticResource Announcement_Black}}"
+                    Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="60" Margin="0,0,10,10">
+                <Button.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="Control.IsEnabled" Value="False">
+                                <Setter Property="Control.Background" Value="LightGreen" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding SelectedAnnouncement}" Value="{StaticResource Announcement_Black}">
+                                <Setter Property="Control.Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style></Button>
+
+
+            <!--<ComboBox ItemsSource="{Binding State.AvailableAnnouncements}" DisplayMemberPath="Name" IsEnabled="{Binding State.CanMakeAnnouncement}"
                       SelectedValuePath="Announcement" SelectedValue="{Binding SelectedAnnouncement, Mode=TwoWay}" 
-                      Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="150" Margin="0,0,10,10" />
+                      Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="25" Width="150" Margin="0,0,10,10" />-->
         </Grid>
 
         <!-- Hand Cards -->
-        <controls:HandCardsControl Cards="{Binding State.HandCards}" CardImages="{Binding CardImageSet}" 
+        <controls:HandCardsControl Cards="{Binding State.HandCards}" CardImages="{Binding CardImageSet}"
                                   SelectableCards="{Binding State.PlaceableHandCards}"  SelectedCard="{Binding SelectedHandCard, Mode=TwoWay}"
                                   Grid.Row="2"/>
     </Grid>

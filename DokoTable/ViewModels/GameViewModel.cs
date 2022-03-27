@@ -23,6 +23,7 @@ using System.Net.Sockets;
 using DokoTable.Models;
 using DokoSharp.Server.Messaging;
 using Utils = DokoSharp.Server.Utils;
+using System.Threading;
 
 namespace DokoTable.ViewModels;
 
@@ -126,6 +127,12 @@ public class GameViewModel : BaseViewModel
         _client.StartListen();
     }
 
+    public ICommand SetSelectedAnnouncementCommand { get; init; }
+    private void DoSetSelectedAnnouncement(Announcement announcement)
+    {
+        SelectedAnnouncement = announcement;
+    }
+
     #endregion
 
     #region Constructor
@@ -144,6 +151,7 @@ public class GameViewModel : BaseViewModel
         _client.MessageReceived += (sender, e) => BeginInvoke(() => Client_MessageReceived(sender, e));
 
         StartCommand = new Command(DoStart);
+        SetSelectedAnnouncementCommand = new ParamCommand<Announcement>(DoSetSelectedAnnouncement);
     }
 
     #endregion

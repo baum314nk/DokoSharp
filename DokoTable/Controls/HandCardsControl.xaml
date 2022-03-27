@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="DokoTable.Controls.HandCardsControl" x:Name="ThisControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:cv="clr-namespace:DokoTable.Converters" 
@@ -10,9 +11,17 @@
     <UserControl.Resources>
         <cv:ItemInEnumerableConverter x:Key="itemInListConv"/>
         <cv:ImageOfCardConverter x:Key="imageOfCardConv"/>
+        
+        <ControlTemplate x:Key="CardListViewTemplate" TargetType="{x:Type ListBox}">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="1" SnapsToDevicePixels="true">
+                <ScrollViewer Focusable="false" Padding="{TemplateBinding Padding}">
+                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                </ScrollViewer>
+            </Border>
+        </ControlTemplate>
     </UserControl.Resources>
     <Grid>
-        <ListView ItemsSource="{Binding Cards, ElementName=ThisControl}" SelectedItem="{Binding SelectedCard, ElementName=ThisControl}"
+        <ListView Template="{DynamicResource CardListViewTemplate}" ItemsSource="{Binding Cards, ElementName=ThisControl}" SelectedItem="{Binding SelectedCard, ElementName=ThisControl}"
                   Background="Transparent" BorderBrush="Transparent"  ScrollViewer.VerticalScrollBarVisibility="Disabled">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -21,13 +30,47 @@
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Image Stretch="Fill">
+                    <Image Stretch="Fill" Margin="7.5,15,7.5,15">
                         <Image.Source>
                             <MultiBinding Converter="{StaticResource imageOfCardConv}">
                                 <Binding Path="CardImages" ElementName="ThisControl" />
                                 <Binding />
                             </MultiBinding>
                         </Image.Source>
+                        <Image.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Image.RenderTransform>
+                        <Image.RenderTransformOrigin>0.5, 0.5</Image.RenderTransformOrigin>
+                        <Image.Resources>
+                            <sys:Double x:Key="ScaleOnHover">0.08</sys:Double>
+                            <Duration x:Key="HoverEffectDuration">0:0:0.15</Duration>
+                        </Image.Resources>
+                        <Image.Triggers>
+                            <EventTrigger RoutedEvent="Image.MouseEnter">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation 
+                                            Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                            By="{StaticResource ScaleOnHover}" Duration="{StaticResource HoverEffectDuration}"/>
+                                        <DoubleAnimation 
+                                            Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                            By="{StaticResource ScaleOnHover}" Duration="{StaticResource HoverEffectDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="Image.MouseLeave">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation 
+                                            Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                            To="1" Duration="{StaticResource HoverEffectDuration}"/>
+                                        <DoubleAnimation 
+                                            Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                            To="1" Duration="{StaticResource HoverEffectDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Image.Triggers>
                     </Image>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -38,7 +81,6 @@
                             <ControlTemplate TargetType="{x:Type ListViewItem}">
                                 <Grid Background="{TemplateBinding Background}">
                                     <Border Name="Selection" Visibility="Collapsed" />
-                                    <!--This is used when GridView is put inside the ListView-->
                                     <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"

@@ -19,54 +19,9 @@ namespace DokoTable.Controls;
 
 public class HandCardsPanel : Panel
 {
-    private UIElement? _hoveredChild;
-
-    protected UIElement? HoveredChild
-    {
-        get => _hoveredChild;
-        set
-        {
-            if (_hoveredChild == value) return;
-
-            const string test = "null";
-            Trace.WriteLine($"Hovered Child is {value?.ToString() ?? test}");
-            _hoveredChild = value;
-            InvalidateArrange();
-        }
-    }
-
-    protected override void OnVisualChildrenChanged(DependencyObject? visualAdded, DependencyObject? visualRemoved)
-    {
-        if (visualAdded != null)
-        {
-            var visual = (UIElement)visualAdded;
-
-            visual.MouseEnter += Child_MouseEnter;
-        }
-        if (visualRemoved != null)
-        {
-            var visual = (UIElement)visualRemoved;
-
-            visual.MouseEnter -= Child_MouseEnter;
-        }
-    }
-
-    private void Child_MouseEnter(object sender, MouseEventArgs e)
-    {
-        HoveredChild = (UIElement?)sender;
-    }
-
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-        HoveredChild = null;
-
-        base.OnMouseLeave(e);
-    }
-
     protected override Size MeasureOverride(Size availableSize)
     {
-        Size size = new Size(0, 0);
-
+        Size size = default;
         foreach (UIElement child in Children)
         {
             child.Measure(availableSize);
@@ -88,61 +43,10 @@ public class HandCardsPanel : Panel
         {
             return ArrangeSideBySide(finalSize);
         }
-        else if (HoveredChild != null)
-        {
-            return ArrangeOverlappedHovered(finalSize);
-        }
         else
         {
             return ArrangeOverlapped(finalSize);
         }
-    }
-
-    protected Size ArrangeOverlappedHovered(Size finalSize)
-    {
-        int hoveredIndex = Children.IndexOf(HoveredChild);
-
-        double childWidth = Children[0].DesiredSize.Width;
-        double childHeight = Children[0].DesiredSize.Height;
-
-        double availableWidth = finalSize.Width - childWidth;
-        double offsetPerElement = availableWidth / (Children.Count - 1);
-
-        for (int i = 0; i < hoveredIndex; i++)
-        {
-            UIElement child = Children[i];
-            child.Arrange(new Rect(offsetPerElement * i, 0, childWidth, childHeight));
-            SetZIndex(child, i);
-        }
-
-        // Arrange hovered child
-        HoveredChild!.Arrange(new Rect(offsetPerElement * hoveredIndex, 0, childWidth, childHeight));
-        SetZIndex(HoveredChild, hoveredIndex);
-
-        // Arrange children behind hovered child
-        int idxOffset = hoveredIndex + 1;
-
-        if (idxOffset == Children.Count - 1)
-        {
-            UIElement child = Children[idxOffset];
-            child.Arrange(new Rect(offsetPerElement * idxOffset, 0, childWidth, childHeight));
-            SetZIndex(child, -1);
-        }
-        else
-        {
-            double startWidth = offsetPerElement * hoveredIndex + childWidth;
-            availableWidth = finalSize.Width - startWidth - childWidth;
-            offsetPerElement = availableWidth / (Children.Count - idxOffset - 1);
-
-            for (int i = idxOffset; i < Children.Count; i++)
-            {
-                UIElement child = Children[i];
-                child.Arrange(new Rect(startWidth + offsetPerElement * (i - idxOffset), 0, childWidth, childHeight));
-                SetZIndex(child, i);
-            }
-        }
-
-        return finalSize;
     }
 
     protected Size ArrangeOverlapped(Size finalSize)
@@ -171,7 +75,6 @@ public class HandCardsPanel : Panel
 
         return finalSize;
     }
-
 }
 
 /// <summary>

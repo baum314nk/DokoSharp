@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace DokoSharp.Server.Messaging;
 
+public class ReplyReadyMessage {
+    
+}
+
 /// <summary>
 /// A request message that expects the player to reply with a card valid for the trick.
 /// </summary>
