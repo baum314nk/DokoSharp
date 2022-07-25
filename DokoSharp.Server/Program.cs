@@ -7,11 +7,11 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
-Console.Write("Enter IP (default 127.0.0.1): ");
+//Console.Write("Enter IP (default 127.0.0.1): ");
 //string ipAddress = Console.ReadLine()!;
 //if (ipAddress == string.Empty) ipAddress = "127.0.0.1";
-string ipAddress = "127.0.0.1";
-Console.Write("Enter port (default 1234): ");
+string ipAddress = "0.0.0.0";
+//Console.Write("Enter port (default 1234): ");
 //string portStr = Console.ReadLine()!;
 //if (portStr == string.Empty) portStr = "1234";
 //int port = int.Parse(portStr);

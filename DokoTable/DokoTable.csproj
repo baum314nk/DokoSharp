@@ -9,9 +9,10 @@
     <ReleaseDir>$(SolutionDir)releases\$(MSBuildProjectName)\</ReleaseDir>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <AssemblyVersion>0.1.1.1</AssemblyVersion>
+    <Configurations>Debug;Release;Release Linux</Configurations>
   </PropertyGroup>
 
-  <Target Name="CopyRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' ">
+  <Target Name="CopyRelease" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release' ">
     <MakeDir Directories="$(ReleaseDir)" />
     <ItemGroup>
       <ReleaseFiles Include="$(OutDir)**\*.*" Exclude="$(OutDir)*.pdb;$(OutDir)*.xml" />
@@ -19,8 +20,12 @@
     <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles -> '$(ReleaseDir)%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
-  <Target Name="Zip" AfterTargets="CopyRelease" Condition="'$(Configuration)' == 'Release' ">
-    <ZipDirectory SourceDirectory="$(ReleaseDir)" DestinationFile="$(ReleaseDir)..\$(ProjectName)_$(AssemblyVersion).zip" Overwrite="true" />
+  <Target Name="Zip" AfterTargets="CopyRelease">
+    <ZipDirectory SourceDirectory="$(ReleaseDir)" DestinationFile="$(ReleaseDir)..\$(ProjectName)_$(AssemblyVersion)_win-x64.zip" Overwrite="true" />
+  </Target>
+
+  <Target Name="DeleteRelease" AfterTargets="Zip">
+    <RemoveDir Directories="$(ReleaseDir)" />
   </Target>
 
   <ItemGroup>
